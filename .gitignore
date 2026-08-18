@@ -1,0 +1,14 @@
+# CONFIDENTIAL — assessment papers and answer keys are Drive/LMS only, never GitHub
+assessment/
+reference/
+
+# OS / editor junk
+.DS_Store
+**/.DS_Store
+~$*
+*.tmp
+.~lock.*
+
+# Build scratch
+__pycache__/
+*.pyc
