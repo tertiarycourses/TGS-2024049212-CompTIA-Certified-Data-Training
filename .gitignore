@@ -12,3 +12,6 @@ reference/
 # Build scratch
 __pycache__/
 *.pyc
+
+# Internal Drive folder link written by /gdrive-push — never publish
+.env
