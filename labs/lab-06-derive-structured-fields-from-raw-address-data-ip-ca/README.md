@@ -29,10 +29,14 @@ A dataset enriched with four derived columns (network address, broadcast, usable
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data && for f in sites.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-06-derive-structured-fields-from-raw-address-data-ip-ca;
+for f in sites.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2

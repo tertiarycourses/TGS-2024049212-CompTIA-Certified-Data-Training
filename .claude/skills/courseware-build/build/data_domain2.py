@@ -21,8 +21,8 @@ DOMAIN2 = [
         services="Killercoda Ubuntu, Python 3, pandas",
         env=KILLERCODA,
         steps=[
-            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data/ — download them from GitHub or copy them from the folder you cloned.",
-             "mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data && for f in sales_dirty.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+            ("Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.",
+             "mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4;\nR=https://raw.githubusercontent.com/tertiarycourses;\nB=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;\nD=lab-04-explore-a-dirty-dataset-missing-values-duplicates-an;\nfor f in sales_dirty.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l"),
                         ("Load it and look at the shape and dtypes first — always know how many records you started with.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.shape);print(d.dtypes)\""),
             ("Count MISSING VALUES per column — the exam's first exploration task.",
@@ -42,7 +42,7 @@ DOMAIN2 = [
         troubleshoot=[
             ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("ModuleNotFoundError: pandas", "Run pip3 install pandas. On Killercoda add --break-system-packages if pip refuses."),
-            ("The heredoc pasted as one line", "Paste the cat > ... <<'EOF' block line by line, or use nano sales_dirty.csv instead."),
+            ("The download produced an empty file", "Check your internet connection and the BASE URL, or copy sales_dirty.csv from the repo folder you cloned."),
             ("z-score flags nothing", "The spend column imported as text because of the blank cells. Wrap it in pd.to_numeric(..., errors='coerce') first, then recompute z."),
         ],
     ),
@@ -58,8 +58,8 @@ DOMAIN2 = [
         services="RegexLab (https://alfredang.github.io/regexgenerator/), Killercoda Ubuntu, Python 3, pandas",
         env="https://alfredang.github.io/regexgenerator/",
         steps=[
-            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data/ — download them from GitHub or copy them from the folder you cloned.",
-             "mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data && for f in contacts.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+            ("Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.",
+             "mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5;\nR=https://raw.githubusercontent.com/tertiarycourses;\nB=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;\nD=lab-05-build-parsing-patterns-in-regexlab-and-apply-them;\nfor f in contacts.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l"),
             ("Paste these three messy contact records into the Test String box:  Mei Tan <mei.tan@example.sg> +65 9123 4567", ""),
             ("Build the EMAIL pattern and watch the match count update live. Confirm it matches all three records.",
              "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"),
@@ -97,8 +97,8 @@ DOMAIN2 = [
         services="IP Calculator (https://alfredang.github.io/ipcalculator/), Killercoda Ubuntu, Python 3, ipaddress module",
         env="https://alfredang.github.io/ipcalculator/",
         steps=[
-            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data/ — download them from GitHub or copy them from the folder you cloned.",
-             "mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data && for f in sites.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+            ("Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.",
+             "mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6;\nR=https://raw.githubusercontent.com/tertiarycourses;\nB=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;\nD=lab-06-derive-structured-fields-from-raw-address-data-ip-ca;\nfor f in sites.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l"),
             ("Enter 192.168.10.0/24 and record the derived values: network, broadcast, usable host count and mask.", ""),
             ("Repeat for 10.0.5.0/22 and 172.16.8.0/29 — note how the usable-host count changes with the prefix.", ""),
                         ("Derive the same four fields in code — this is the DERIVED VARIABLE technique from the exam objectives.",
@@ -130,8 +130,8 @@ DOMAIN2 = [
         services="Killercoda Ubuntu, SQLite 3, SQL joins, Python 3/pandas",
         env=KILLERCODA,
         steps=[
-            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data/ — download them from GitHub or copy them from the folder you cloned.",
-             "mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data && for f in customers.csv orders.csv targets.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+            ("Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.",
+             "mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7;\nR=https://raw.githubusercontent.com/tertiarycourses;\nB=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;\nD=lab-07-integrate-multiple-datasets-with-sql-joins-and-clean;\nfor f in customers.csv orders.csv targets.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l"),
                                                 ("Load all three into SQLite in one go.",
              "sqlite3 integrate.db <<'EOF'\n.mode csv\n.import customers.csv customers\n.import orders.csv orders\n.import targets.csv targets\n.headers on\nSELECT COUNT(*) AS customers FROM customers; SELECT COUNT(*) AS orders FROM orders;\nEOF"),
             ("INNER JOIN — returns only matched rows. Count them and note what you silently lost.",

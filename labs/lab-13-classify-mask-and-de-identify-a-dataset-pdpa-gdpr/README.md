@@ -29,10 +29,14 @@ A classification matrix for every column plus three protected versions of the da
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data && for f in customers.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr;
+for f in customers.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2

@@ -29,10 +29,14 @@ A normalised 3NF SQLite database (customers, products, orders) with enforced for
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data && for f in customers.csv products.csv orders.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-01-build-a-relational-schema-and-prove-referential-inte;
+for f in customers.csv products.csv orders.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2
@@ -45,10 +49,10 @@ PRAGMA foreign_keys = ON;
 
 ### Step 3
 
-Create the customers table with a primary key and typed columns (INTEGER, TEXT, DATE).
+Create the customers table — the columns must match customers.csv exactly, or .import silently drops data.
 
 ```bash
-CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT UNIQUE, joined DATE);
+CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT UNIQUE, region TEXT, joined DATE);
 ```
 
 ### Step 4
@@ -77,29 +81,13 @@ sqlite3 sales.db ".mode csv" ".import --skip 1 customers.csv customers" ".import
 
 ### Step 7
 
-Insert the product rows.
+ATTACK 1 — insert an order for a customer who does not exist, using a FREE order_id so the error you see is the foreign key firing and not a duplicate primary key. This MUST be rejected.
 
 ```bash
-INSERT INTO products VALUES (10,'Wireless Mouse',24.90),(11,'USB-C Hub',59.00);
+INSERT INTO orders VALUES (9999,999,10,1,'2025-03-03');
 ```
 
 ### Step 8
-
-Insert valid orders that respect both foreign keys.
-
-```bash
-INSERT INTO orders VALUES (100,1,10,2,'2025-03-01'),(101,2,11,1,'2025-03-02');
-```
-
-### Step 9
-
-ATTACK 1 — try to insert an order for a customer who does not exist. This MUST be rejected.
-
-```bash
-INSERT INTO orders VALUES (102,999,10,1,'2025-03-03');
-```
-
-### Step 10
 
 ATTACK 2 — delete customer 1 and watch the cascade remove their orders, leaving nothing orphaned.
 
@@ -107,7 +95,7 @@ ATTACK 2 — delete customer 1 and watch the cascade remove their orders, leavin
 DELETE FROM customers WHERE customer_id = 1; SELECT * FROM orders;
 ```
 
-### Step 11
+### Step 9
 
 Run a join across all three tables to confirm the schema answers a real business question.
 
@@ -138,6 +126,8 @@ The three tables import 40 customers, 10 products and 120 orders. Attack 1 fails
 |---|---|
 | The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | The orphan insert SUCCEEDED | You forgot PRAGMA foreign_keys = ON. It resets on every new connection — re-run it after reopening sqlite3. |
+| It says UNIQUE constraint failed, not FOREIGN KEY | That order_id already exists in orders.csv. Pick an unused id (9999) so the foreign key is what fails. |
+| 'expected 5 columns but found 6 - extras ignored' | Your CREATE TABLE does not match the CSV header. Run head -1 customers.csv and make the column list identical, then DROP and re-import. |
 | 'no such table' error | You are in a different database file. Run .databases inside sqlite3 to confirm you opened sales.db. |
 | The cascade did not fire | ON DELETE CASCADE only works with foreign keys enforced. Re-check the PRAGMA, then re-create the orders table. |
 

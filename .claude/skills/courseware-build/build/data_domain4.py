@@ -22,8 +22,8 @@ DOMAIN4 = [
         services="Killercoda Ubuntu, Python 3, pandas, matplotlib",
         env=KILLERCODA,
         steps=[
-            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data/ — download them from GitHub or copy them from the folder you cloned.",
-             "mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data && for f in sales.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+            ("Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.",
+             "mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11;\nR=https://raw.githubusercontent.com/tertiarycourses;\nB=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;\nD=lab-11-choose-the-right-chart-five-questions-five-chart-typ;\nfor f in sales.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l"),
                         ("Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.",
              "python3 -c \"import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');p=d.pivot_table(index='month',columns='region',values='revenue').reindex(['Jan','Feb','Mar']);p.plot(marker='o');plt.title('Revenue Trend by Region');plt.ylabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('01_line.png',dpi=120)\""),
             ("Q2 'Which region sells most?' → BAR CHART, because you are comparing categories.",
@@ -63,8 +63,8 @@ DOMAIN4 = [
         services="Killercoda Ubuntu, Python 3, pandas, matplotlib",
         env=KILLERCODA,
         steps=[
-            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data/ — download them from GitHub or copy them from the folder you cloned.",
-             "mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data && for f in kpi.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+            ("Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.",
+             "mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12;\nR=https://raw.githubusercontent.com/tertiarycourses;\nB=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;\nD=lab-12-build-a-kpi-dashboard-and-validate-its-accuracy;\nfor f in kpi.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l"),
             ("Compute the headline KPIs first — you must know the true numbers BEFORE you draw anything.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('total revenue',d.revenue.sum());print('total orders',d.orders.sum());print('avg order value',round(d.revenue.sum()*1000/d.orders.sum(),2));print('vs target',round(d.revenue.sum()*100/d.target.sum(),1),'%')\""),
             ("Build the four-panel dashboard in one script.",
@@ -76,20 +76,20 @@ DOMAIN4 = [
             ("VALIDATION 3 — cross-validate the % of target figure against a hand calculation.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('Central', round(d[d.region=='Central'].revenue.sum()/d[d.region=='Central'].target.sum()*100,1),'% expected 111.9')\""),
             ("Now PLANT AN ERROR — corrupt one revenue value and rebuild the dashboard.",
-             "sed -i 's/Mar,North,161/Mar,North,1610/' kpi.csv && python3 dashboard.py"),
+             "sed -i 's/Mar,North,159.5/Mar,North,1595/' kpi.csv && python3 dashboard.py"),
             ("Re-run validation 2 and 3 and confirm your checks CATCH the planted error.",
-             "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',d.revenue.sum(),'(was 1129)');print('North % of target',round(d[d.region=='North'].revenue.sum()/d[d.region=='North'].target.sum()*100,1),'%')\""),
+             "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',round(d.revenue.sum(),1),'(was 3021.3)');print('North % of target',round(d[d.region=='North'].revenue.sum()/d[d.region=='North'].target.sum()*100,1),'%')\""),
             ("Restore the correct value and confirm the dashboard returns to its validated state.",
-             "sed -i 's/Mar,North,1610/Mar,North,161/' kpi.csv && python3 dashboard.py && python3 -c \"import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())\""),
+             "sed -i 's/Mar,North,1595/Mar,North,159.5/' kpi.csv && python3 dashboard.py && python3 -c \"import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())\""),
             ("Sign off the validation checklist: record count, recalculation, cross-validation, and visual review.", ""),
         ],
         test=("dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent "
-              "methods, and North reports 111.9% of target. After the planted error the total jumps by roughly 1450 and "
-              "North exceeds 250% of target — an impossible figure your validation flags immediately."),
+              "methods. After the planted error the total jumps to 4456.8 and North reports 276.9% of target — an "
+              "impossible figure your validation catches immediately. Restoring the value returns the total to 3021.3."),
         troubleshoot=[
             ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("Panels overlap or the title is cut", "Use plt.tight_layout(rect=[0,0,1,0.95]) so the suptitle gets its own space."),
-            ("sed did not change anything", "Check the exact text with grep 'Mar,North' kpi.csv — sed needs a byte-exact match."),
+            ("sed did not change anything", "sed needs a BYTE-EXACT match. Run grep 'Mar,North' kpi.csv and copy the value from the output — 159.5 is not the same string as 159.50 or 161."),
             ("The % of target axis looks wrong", "Confirm you summed target per region (3 months × the monthly target), not just one month's value."),
         ],
     ),

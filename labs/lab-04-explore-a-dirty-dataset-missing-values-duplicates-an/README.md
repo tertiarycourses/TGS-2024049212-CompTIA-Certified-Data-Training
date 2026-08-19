@@ -29,10 +29,14 @@ A data-quality profile report quantifying null counts per column, duplicate rows
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data && for f in sales_dirty.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-04-explore-a-dirty-dataset-missing-values-duplicates-an;
+for f in sales_dirty.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2
@@ -104,7 +108,7 @@ Your profile reports 63 rows, 4 null cities, 3 null spends, 2 null order_dates a
 |---|---|
 | The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | ModuleNotFoundError: pandas | Run pip3 install pandas. On Killercoda add --break-system-packages if pip refuses. |
-| The heredoc pasted as one line | Paste the cat > ... <<'EOF' block line by line, or use nano sales_dirty.csv instead. |
+| The download produced an empty file | Check your internet connection and the BASE URL, or copy sales_dirty.csv from the repo folder you cloned. |
 | z-score flags nothing | The spend column imported as text because of the blank cells. Wrap it in pd.to_numeric(..., errors='coerce') first, then recompute z. |
 
 ---

@@ -1,6 +1,6 @@
 # WSQ - CompTIA Certified Data+ Training — Learner Guide
 
-**WSQ Course Code:** TGS-2024049212  |  **Conducted by:** Tertiary Infotech Academy Pte Ltd (UEN 201200696W)  |  **Version v5.0 · 19 August 2026**
+**WSQ Course Code:** TGS-2024049212  |  **Conducted by:** Tertiary Infotech Academy Pte Ltd (UEN 201200696W)  |  **Version v5.1 · 19 August 2026**
 
 ## Contents
 
@@ -119,10 +119,14 @@ A normalised 3NF SQLite database (customers, products, orders) with enforced for
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data && for f in customers.csv products.csv orders.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-01-build-a-relational-schema-and-prove-referential-inte;
+for f in customers.csv products.csv orders.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Turn foreign-key enforcement ON — SQLite leaves it off by default, which is the single most common cause of orphaned rows.
@@ -131,10 +135,10 @@ A normalised 3NF SQLite database (customers, products, orders) with enforced for
    PRAGMA foreign_keys = ON;
    ```
 
-3. Create the customers table with a primary key and typed columns (INTEGER, TEXT, DATE).
+3. Create the customers table — the columns must match customers.csv exactly, or .import silently drops data.
 
    ```bash
-   CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT UNIQUE, joined DATE);
+   CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT UNIQUE, region TEXT, joined DATE);
    ```
 
 4. Create the products table — note REAL for currency and the CHECK constraint enforcing domain integrity.
@@ -155,31 +159,19 @@ A normalised 3NF SQLite database (customers, products, orders) with enforced for
    sqlite3 sales.db ".mode csv" ".import --skip 1 customers.csv customers" ".import --skip 1 products.csv products" ".import --skip 1 orders.csv orders" "SELECT COUNT(*) FROM customers; SELECT COUNT(*) FROM products; SELECT COUNT(*) FROM orders;"
    ```
 
-7. Insert the product rows.
+7. ATTACK 1 — insert an order for a customer who does not exist, using a FREE order_id so the error you see is the foreign key firing and not a duplicate primary key. This MUST be rejected.
 
    ```bash
-   INSERT INTO products VALUES (10,'Wireless Mouse',24.90),(11,'USB-C Hub',59.00);
+   INSERT INTO orders VALUES (9999,999,10,1,'2025-03-03');
    ```
 
-8. Insert valid orders that respect both foreign keys.
-
-   ```bash
-   INSERT INTO orders VALUES (100,1,10,2,'2025-03-01'),(101,2,11,1,'2025-03-02');
-   ```
-
-9. ATTACK 1 — try to insert an order for a customer who does not exist. This MUST be rejected.
-
-   ```bash
-   INSERT INTO orders VALUES (102,999,10,1,'2025-03-03');
-   ```
-
-10. ATTACK 2 — delete customer 1 and watch the cascade remove their orders, leaving nothing orphaned.
+8. ATTACK 2 — delete customer 1 and watch the cascade remove their orders, leaving nothing orphaned.
 
    ```bash
    DELETE FROM customers WHERE customer_id = 1; SELECT * FROM orders;
    ```
 
-11. Run a join across all three tables to confirm the schema answers a real business question.
+9. Run a join across all three tables to confirm the schema answers a real business question.
 
    ```bash
    SELECT c.first_name, p.name, o.qty, o.qty*p.unit_price AS line_total FROM orders o JOIN customers c ON c.customer_id=o.customer_id JOIN products p ON p.product_id=o.product_id;
@@ -194,6 +186,8 @@ The three tables import 40 customers, 10 products and 120 orders. Attack 1 fails
 
 - The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - The orphan insert SUCCEEDED — You forgot PRAGMA foreign_keys = ON. It resets on every new connection — re-run it after reopening sqlite3.
+- It says UNIQUE constraint failed, not FOREIGN KEY — That order_id already exists in orders.csv. Pick an unused id (9999) so the foreign key is what fails.
+- 'expected 5 columns but found 6 - extras ignored' — Your CREATE TABLE does not match the CSV header. Run head -1 customers.csv and make the column list identical, then DROP and re-import.
 - 'no such table' error — You are in a different database file. Run .databases inside sqlite3 to confirm you opened sales.db.
 - The cascade did not fire — ON DELETE CASCADE only works with foreign keys enforced. Re-check the PRAGMA, then re-create the orders table.
 
@@ -216,10 +210,14 @@ Three files (customers.csv, customers.json, notes.txt) plus a Python script that
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-02-compare-structured-semi-structured-and-unstructured/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-02-compare-structured-semi-structured-and-unstructured/data && for f in customers.csv customers.json notes.txt; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-02-compare-structured-semi-structured-and-unstructured;
+for f in customers.csv customers.json notes.txt; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Query the CSV — three lines of code, because the structure is guaranteed.
@@ -254,7 +252,7 @@ The CSV and the JSON both total 2293.17 across 12 customers. The JSON also retur
 **If it doesn't work**
 
 - The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
-- JSONDecodeError — The shell ate a quote. Re-run the printf line exactly, or use nano customers.json and paste the JSON in.
+- JSONDecodeError — customers.json did not download cleanly. Check it with head -c 80 customers.json — if it starts with '404' the URL is wrong.
 - The regex returns '240.50' and '89' plus junk — That is the expected lesson — unstructured text has no guarantees. Tighten the pattern in RegexLab.
 - KeyError: 'spend' — Your CSV header row is missing or misspelled. Run head -1 customers.csv to check it.
 
@@ -335,10 +333,14 @@ A data-quality profile report quantifying null counts per column, duplicate rows
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data && for f in sales_dirty.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-04-explore-a-dirty-dataset-missing-values-duplicates-an;
+for f in sales_dirty.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Load it and look at the shape and dtypes first — always know how many records you started with.
@@ -386,7 +388,7 @@ Your profile reports 63 rows, 4 null cities, 3 null spends, 2 null order_dates a
 
 - The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - ModuleNotFoundError: pandas — Run pip3 install pandas. On Killercoda add --break-system-packages if pip refuses.
-- The heredoc pasted as one line — Paste the cat > ... <<'EOF' block line by line, or use nano sales_dirty.csv instead.
+- The download produced an empty file — Check your internet connection and the BASE URL, or copy sales_dirty.csv from the repo folder you cloned.
 - z-score flags nothing — The spend column imported as text because of the blank cells. Wrap it in pd.to_numeric(..., errors='coerce') first, then recompute z.
 
 > **Note:** The same procedure, with the copy-paste commands, is in labs/lab-04/README.md in the course repository.
@@ -408,10 +410,14 @@ Three validated regex patterns (name, email, phone) and a cleaned CSV with the s
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data && for f in contacts.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-05-build-parsing-patterns-in-regexlab-and-apply-them;
+for f in contacts.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Paste these three messy contact records into the Test String box:  Mei Tan <mei.tan@example.sg> +65 9123 4567
@@ -483,10 +489,14 @@ A dataset enriched with four derived columns (network address, broadcast, usable
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data && for f in sites.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-06-derive-structured-fields-from-raw-address-data-ip-ca;
+for f in sites.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Enter 192.168.10.0/24 and record the derived values: network, broadcast, usable host count and mask.
@@ -536,10 +546,14 @@ A single integrated, deduplicated analysis table built from three sources, with 
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data && for f in customers.csv orders.csv targets.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-07-integrate-multiple-datasets-with-sql-joins-and-clean;
+for f in customers.csv orders.csv targets.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Load all three into SQLite in one go.
@@ -636,10 +650,14 @@ A descriptive-statistics report showing mean, median, mode, range, variance, SD 
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data && for f in salaries.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-08-descriptive-statistics-and-the-outlier-that-moves-th;
+for f in salaries.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Compute CENTRAL TENDENCY — mean, median and mode together.
@@ -654,10 +672,10 @@ A descriptive-statistics report showing mean, median, mode, range, variance, SD 
    python3 -c "import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;print('min',s.min(),'max',s.max(),'range',s.max()-s.min());print('variance',round(s.var(),2),'sd',round(s.std(),2))"
    ```
 
-4. Compute the Z-SCORE for every row and flag anything beyond |z| > 2.
+4. Compute the Z-SCORE for every row and flag anything beyond the standard |z| > 3 threshold.
 
    ```bash
-   python3 -c "import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;d['z']=((s-s.mean())/s.std()).round(2);print(d);print('FLAGGED:');print(d[abs(d.z)>2])"
+   python3 -c "import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;d['z']=((s-s.mean())/s.std()).round(2);print(d);print('FLAGGED:');print(d[abs(d.z)>3])"
    ```
 
 5. Now remove the outlier and recompute the SAME statistics.
@@ -714,10 +732,14 @@ A completed hypothesis test: stated H0/H1, computed t-statistic and p-value, an 
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data && for f in abtest.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-09-hypothesis-testing-t-test-p-value-and-the-two-error;
+for f in abtest.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. STATE THE HYPOTHESES before you look at any result — this is the discipline the exam tests.  H0: there is no difference in mean order value.  H1: the new page has a higher mean order value.
@@ -782,10 +804,14 @@ A correlation matrix, a fitted regression equation with R-squared, a prediction,
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-10-correlation-regression-and-the-causation-trap/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-10-correlation-regression-and-the-causation-trap/data && for f in marketing.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-10-correlation-regression-and-the-causation-trap;
+for f in marketing.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Compute the full CORRELATION MATRIX — every pair at once.
@@ -870,10 +896,14 @@ Five correctly chosen charts (line, bar, pie, histogram, scatter) as PNG files, 
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data && for f in sales.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-11-choose-the-right-chart-five-questions-five-chart-typ;
+for f in sales.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.
@@ -954,10 +984,14 @@ A four-panel KPI dashboard PNG plus a signed validation checklist that catches a
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data && for f in kpi.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-12-build-a-kpi-dashboard-and-validate-its-accuracy;
+for f in kpi.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Compute the headline KPIs first — you must know the true numbers BEFORE you draw anything.
@@ -1013,32 +1047,32 @@ python3 dashboard.py
 7. Now PLANT AN ERROR — corrupt one revenue value and rebuild the dashboard.
 
    ```bash
-   sed -i 's/Mar,North,161/Mar,North,1610/' kpi.csv && python3 dashboard.py
+   sed -i 's/Mar,North,159.5/Mar,North,1595/' kpi.csv && python3 dashboard.py
    ```
 
 8. Re-run validation 2 and 3 and confirm your checks CATCH the planted error.
 
    ```bash
-   python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',d.revenue.sum(),'(was 1129)');print('North % of target',round(d[d.region=='North'].revenue.sum()/d[d.region=='North'].target.sum()*100,1),'%')"
+   python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',round(d.revenue.sum(),1),'(was 3021.3)');print('North % of target',round(d[d.region=='North'].revenue.sum()/d[d.region=='North'].target.sum()*100,1),'%')"
    ```
 
 9. Restore the correct value and confirm the dashboard returns to its validated state.
 
    ```bash
-   sed -i 's/Mar,North,1610/Mar,North,161/' kpi.csv && python3 dashboard.py && python3 -c "import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())"
+   sed -i 's/Mar,North,1595/Mar,North,159.5/' kpi.csv && python3 dashboard.py && python3 -c "import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())"
    ```
 
 10. Sign off the validation checklist: record count, recalculation, cross-validation, and visual review.
 
 **Test it — the expected result**
 
-dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent methods, and North reports 111.9% of target. After the planted error the total jumps by roughly 1450 and North exceeds 250% of target — an impossible figure your validation flags immediately.
+dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent methods. After the planted error the total jumps to 4456.8 and North reports 276.9% of target — an impossible figure your validation catches immediately. Restoring the value returns the total to 3021.3.
 
 **If it doesn't work**
 
 - The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - Panels overlap or the title is cut — Use plt.tight_layout(rect=[0,0,1,0.95]) so the suptitle gets its own space.
-- sed did not change anything — Check the exact text with grep 'Mar,North' kpi.csv — sed needs a byte-exact match.
+- sed did not change anything — sed needs a BYTE-EXACT match. Run grep 'Mar,North' kpi.csv and copy the value from the output — 159.5 is not the same string as 159.50 or 161.
 - The % of target axis looks wrong — Confirm you summed target per region (3 months × the monthly target), not just one month's value.
 
 > **Note:** The same procedure, with the copy-paste commands, is in labs/lab-12/README.md in the course repository.
@@ -1075,10 +1109,14 @@ A classification matrix for every column plus three protected versions of the da
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data && for f in customers.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr;
+for f in customers.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. CLASSIFY first. For each column write down its classification (public / internal / sensitive / confidential) and its data type tag (PII, PIFI, none). NRIC is confidential PII; salary is sensitive PIFI; dept is internal.
@@ -1187,10 +1225,14 @@ A reusable dq_check.py suite that scores five quality dimensions, exits non-zero
 
 **Step-by-step**
 
-1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-15-automated-quality-assurance-profile-rule-monitor/data/ — download them from GitHub or copy them from the folder you cloned.
+1. Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
    ```bash
-   mkdir -p ~/dataplus/lab15 && cd ~/dataplus/lab15 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-15-automated-quality-assurance-profile-rule-monitor/data && for f in feed_good.csv feed_bad.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   mkdir -p ~/dataplus/lab15 && cd ~/dataplus/lab15;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-15-automated-quality-assurance-profile-rule-monitor;
+for f in feed_good.csv feed_bad.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
    ```
 
 2. Write the quality suite — one function per quality dimension.

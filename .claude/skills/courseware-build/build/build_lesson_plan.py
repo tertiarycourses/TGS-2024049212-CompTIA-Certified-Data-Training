@@ -126,7 +126,8 @@ prodoc.add_cover_page(doc,"LESSON PLAN",C.TITLE,C.VERSION.lstrip("v"),
                       course_logo=None, course_code=C.COURSE_CODE)
 prodoc.add_version_control(doc,[
  ("4.0","1 September 2024","Previous release — CompTIA Data+ course slides and lesson plan (legacy master deck).",C.TRAINER),
- (C.VERSION.lstrip("v"),C.VERSION_DATE,"Full rebuild against the CompTIA Data+ (DA0-001) exam domains and the approved Course Proposal (LU1-LU5 / LO1-LO5, TSC ATP-PIN-3001-1.1). 5-day / 40-hour schedule with 15 hands-on labs; assessment block moved to Day 5, 4:00-6:00 pm.",C.TRAINER),
+ ("5.0",C.VERSION_DATE,"Full rebuild against the CompTIA Data+ (DA0-001) exam domains and the approved Course Proposal (LU1-LU5 / LO1-LO5, TSC ATP-PIN-3001-1.1). 5-day / 40-hour schedule with 15 hands-on labs; assessment block moved to Day 5, 4:00-6:00 pm.",C.TRAINER),
+ ("5.1",C.VERSION_DATE,"Each hands-on lab now ships its own dataset (CSV, plus XLSX where a spreadsheet is the natural tool) under labs/<lab>/data/, replacing the typed-in sample data. Datasets enlarged to realistic sample sizes so the statistics behave correctly; every expected result re-verified by executing the labs against the shipped data. Lab 1 DDL, Lab 12 fault injection and Lab 8 z-threshold corrected.",C.TRAINER),
 ])
 prodoc.add_toc(doc)
 

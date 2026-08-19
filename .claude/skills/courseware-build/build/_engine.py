@@ -61,14 +61,15 @@ def rect(s,x,y,w,h,color,line=None):
 def oval(s,x,y,w,h,color):
     sp=s.shapes.add_shape(9,x,y,w,h); sp.fill.solid(); sp.fill.fore_color.rgb=color
     sp.line.fill.background(); sp.shadow.inherit=False; return sp
-def txt(s,x,y,w,h,runs,align=PP_ALIGN.LEFT,anchor=MSO_ANCHOR.TOP,space=4):
-    tb=s.shapes.add_textbox(x,y,w,h); tf=tb.text_frame; tf.word_wrap=True; tf.vertical_anchor=anchor
+def txt(s,x,y,w,h,runs,align=PP_ALIGN.LEFT,anchor=MSO_ANCHOR.TOP,space=4,
+        font="Arial",wrap=True):
+    tb=s.shapes.add_textbox(x,y,w,h); tf=tb.text_frame; tf.word_wrap=wrap; tf.vertical_anchor=anchor
     for i,line in enumerate(runs):
         p=tf.paragraphs[0] if i==0 else tf.add_paragraph()
         p.alignment=align; p.space_after=Pt(space)
         for t,sz,col,bold in line:
             r=p.add_run(); r.text=t; r.font.size=Pt(sz); r.font.bold=bold
-            r.font.color.rgb=col; r.font.name="Arial"
+            r.font.color.rgb=col; r.font.name=font
     return tb
 def bullets(s,x,y,w,h,items,size=18,color=INK,gap=10,mcolor=BLUE):
     tb=s.shapes.add_textbox(x,y,w,h); tf=tb.text_frame; tf.word_wrap=True
@@ -522,7 +523,12 @@ def steps_slide(act_title,steps,kicker,accent=TEAL,part=None,start=1):
     s=head(slide(),act_title+(f" — {part}" if part else ""),kicker,kcolor=accent)
     y0=Inches(1.92); n=len(steps); gapy=Inches(0.1)
     AVAIL=Inches(4.92)          # 1.92 → 6.84, clear of the 7.05 footer
-    rh=int(min(Inches(1.12),(AVAIL-gapy*(n-1))/max(n,1)))
+    # a step whose command spans several lines needs a taller card
+    _lines=[max(1,len([l for l in (c or "").split("\n") if l.strip()])) for _,c in steps]
+    _units=sum(min(x,5) for x in _lines) or n
+    rh_max=int(min(Inches(1.55),(AVAIL-gapy*(n-1))/max(n,1)*(5.0/max(_units/max(n,1),1.0))))
+    rh=int(min(Inches(1.12) if max(_lines)<=1 else Inches(1.55),
+               (AVAIL-gapy*(n-1))/max(n,1)))
     for i,(text,cmd) in enumerate(steps):
         y=int(y0+(rh+gapy)*i); col=PALETTE[i%len(PALETTE)]
         rect(s,Inches(0.85),y,Inches(11.63),rh,LIGHT); rect(s,Inches(0.85),y,Inches(0.09),rh,col)
@@ -539,6 +545,10 @@ def steps_slide(act_title,steps,kicker,accent=TEAL,part=None,start=1):
             # WRAP the command over up to 3 lines rather than slicing it into an
             # unrunnable fragment — a partial command teaches the wrong thing.
             raw=str(cmd)
+            # A command the author already split across lines is pre-formatted: render it
+            # verbatim so no line is re-broken inside a URL or a quoted literal.
+            _pre=[l for l in str(cmd).split("\n") if l.strip()]
+            _is_pre = len(_pre)>1 and "<<'EOF'" not in raw and '<<"EOF"' not in raw
             def _split_py_c(t):
                 """Split `python3 -c "a;b;c"` at its statement semicolons so no line
                 ever breaks inside a regex or string literal."""
@@ -570,16 +580,22 @@ def steps_slide(act_title,steps,kicker,accent=TEAL,part=None,start=1):
                       if fname else head_line)
             else:
                 flat=" ".join(raw.split())
-            pysplit=_split_py_c(flat) if len(flat)>118 else None
-            if pysplit and len(pysplit)<=6:
-                wrapped=[_ellipsis(x,150) for x in pysplit]
+            if _is_pre:
+                wrapped=_pre[:6]
             else:
-                wrapped=_wrap_cmd(flat,per_line=118,max_lines=6)
+                pysplit=_split_py_c(flat) if len(flat)>110 else None
+                if pysplit and len(pysplit)<=6:
+                    wrapped=[_ellipsis(x,132) for x in pysplit]
+                else:
+                    wrapped=_wrap_cmd(flat,per_line=110,max_lines=6)
+            _mx=max((len(x) for x in wrapped), default=0)
             csize={1:10.5,2:9.0,3:7.8}.get(len(wrapped),6.4)
+            if _mx>100: csize=min(csize,6.4)
+            elif _mx>84: csize=min(csize,7.4)
             runs=[[("$ "+wrapped[0],csize,RGBColor(0x9C,0xDC,0xFE),False)]]
             runs+=[[("   "+ln,csize,RGBColor(0x9C,0xDC,0xFE),False)] for ln in wrapped[1:]]
             txt(s,Inches(1.78),int(y+Inches(0.44)),Inches(10.2),int(rh-Inches(0.54)),
-                runs,anchor=MSO_ANCHOR.MIDDLE,space=0)
+                runs,anchor=MSO_ANCHOR.MIDDLE,space=0,font="Consolas",wrap=False)
         else:
             txt(s,Inches(1.62),y,Inches(10.6),rh,[[(text,12.5,INK,False)]],anchor=MSO_ANCHOR.MIDDLE)
     footer(s); return s
@@ -684,7 +700,8 @@ def step_slide(kicker,act_title,n,total,text,cmd=""):
     txt(s,Inches(2.55),Inches(2.4),Inches(10.1),Inches(1.3),[[(text,23,INK,False)]],anchor=MSO_ANCHOR.MIDDLE)
     if cmd:
         rect(s,Inches(2.55),Inches(4.15),Inches(10.1),Inches(0.95),RGBColor(0x0B,0x12,0x20))
-        txt(s,Inches(2.8),Inches(4.28),Inches(9.7),Inches(0.7),[[("$ "+cmd,13,RGBColor(0x9C,0xDC,0xFE),False)]],anchor=MSO_ANCHOR.MIDDLE)
+        txt(s,Inches(2.8),Inches(4.28),Inches(9.7),Inches(0.7),[[("$ "+cmd,13,RGBColor(0x9C,0xDC,0xFE),False)]],
+            anchor=MSO_ANCHOR.MIDDLE,font="Consolas",wrap=False)
     footer(s); return s
 def test_slide(act_title,text,kicker,troubleshoot=None):
     """Verification slide — the success criterion PLUS a troubleshooting band, so it

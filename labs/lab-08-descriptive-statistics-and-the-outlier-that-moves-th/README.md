@@ -29,10 +29,14 @@ A descriptive-statistics report showing mean, median, mode, range, variance, SD 
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data && for f in salaries.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-08-descriptive-statistics-and-the-outlier-that-moves-th;
+for f in salaries.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2
@@ -53,10 +57,10 @@ python3 -c "import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;print('
 
 ### Step 4
 
-Compute the Z-SCORE for every row and flag anything beyond |z| > 2.
+Compute the Z-SCORE for every row and flag anything beyond the standard |z| > 3 threshold.
 
 ```bash
-python3 -c "import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;d['z']=((s-s.mean())/s.std()).round(2);print(d);print('FLAGGED:');print(d[abs(d.z)>2])"
+python3 -c "import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;d['z']=((s-s.mean())/s.std()).round(2);print(d);print('FLAGGED:');print(d[abs(d.z)>3])"
 ```
 
 ### Step 5

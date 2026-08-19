@@ -29,10 +29,14 @@ Three files (customers.csv, customers.json, notes.txt) plus a Python script that
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-02-compare-structured-semi-structured-and-unstructured/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-02-compare-structured-semi-structured-and-unstructured/data && for f in customers.csv customers.json notes.txt; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-02-compare-structured-semi-structured-and-unstructured;
+for f in customers.csv customers.json notes.txt; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2
@@ -88,7 +92,7 @@ The CSV and the JSON both total 2293.17 across 12 customers. The JSON also retur
 | Symptom | Fix |
 |---|---|
 | The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
-| JSONDecodeError | The shell ate a quote. Re-run the printf line exactly, or use nano customers.json and paste the JSON in. |
+| JSONDecodeError | customers.json did not download cleanly. Check it with head -c 80 customers.json — if it starts with '404' the URL is wrong. |
 | The regex returns '240.50' and '89' plus junk | That is the expected lesson — unstructured text has no guarantees. Tighten the pattern in RegexLab. |
 | KeyError: 'spend' | Your CSV header row is missing or misspelled. Run head -1 customers.csv to check it. |
 

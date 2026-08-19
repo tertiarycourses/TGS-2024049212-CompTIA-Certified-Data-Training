@@ -58,6 +58,10 @@ Official courseware for the WSQ **CompTIA Certified Data+ Training** course deli
 | 14 | [Assess Data-Leakage Risk and Set Access Controls](labs/lab-14-assess-data-leakage-risk-and-set-access-controls/) | 5 | Threat Simulator |
 | 15 | [Automated Quality Assurance: Profile, Rule, Monitor](labs/lab-15-automated-quality-assurance-profile-rule-monitor/) | 5 | Killercoda · pandas |
 
+Every data lab ships its dataset in `labs/<lab>/data/` — CSV, plus an XLSX workbook where a
+spreadsheet is the natural tool. Each `data/README.md` documents the files and the defects
+planted in them. Learners download the data in the first step of the lab; nothing is typed in.
+
 ### Lab environment
 
 | Tool | Used for |
@@ -85,9 +89,9 @@ Then open the [Killercoda Ubuntu playground](https://killercoda.com/playgrounds/
 
 | Artifact | File |
 |---|---|
-| Trainer Slides (219 slides) | [`courseware/WSQ - CompTIA Certified Data+ Training-v5.0.pptx`](courseware/) |
+| Trainer Slides (215 slides) | [`courseware/WSQ - CompTIA Certified Data+ Training-v5.1.pptx`](courseware/) |
 | Lesson Plan (10 pp) | [`courseware/LP-WSQ - CompTIA Certified Data+ Training.docx`](courseware/) |
-| Learner Guide (43 pp) | [`courseware/LG-WSQ - CompTIA Certified Data+ Training.docx`](courseware/) |
+| Learner Guide (44 pp) | [`courseware/LG-WSQ - CompTIA Certified Data+ Training.docx`](courseware/) |
 | Learner Guide (Markdown) | [`LG-WSQ - CompTIA Certified Data+ Training.md`](LG-WSQ%20-%20CompTIA%20Certified%20Data+%20Training.md) |
 | Lab index | [`labs/README.md`](labs/README.md) |
 
@@ -135,4 +139,4 @@ See the [course page](https://www.tertiarycourses.com.sg/wsq-comptia-certified-d
 ---
 
 © 2026 Tertiary Infotech Academy Pte Ltd (UEN 201200696W). All rights reserved.
-Course code TGS-2024049212 · Courseware version v5.0 · 19 August 2026
+Course code TGS-2024049212 · Courseware version v5.1 · 19 August 2026

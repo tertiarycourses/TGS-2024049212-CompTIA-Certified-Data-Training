@@ -29,10 +29,14 @@ A four-panel KPI dashboard PNG plus a signed validation checklist that catches a
 
 ### Step 1
 
-Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data/ — download them from GitHub or copy them from the folder you cloned.
+Download this lab's dataset. The same files ship in the course repo under this lab's data/ folder.
 
 ```bash
-mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data && for f in kpi.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12;
+R=https://raw.githubusercontent.com/tertiarycourses;
+B=$R/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs;
+D=lab-12-build-a-kpi-dashboard-and-validate-its-accuracy;
+for f in kpi.csv; do curl -fsSO $B/$D/data/$f || echo FAILED $f; done; ls -l
 ```
 
 ### Step 2
@@ -100,7 +104,7 @@ python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('Central', round(
 Now PLANT AN ERROR — corrupt one revenue value and rebuild the dashboard.
 
 ```bash
-sed -i 's/Mar,North,161/Mar,North,1610/' kpi.csv && python3 dashboard.py
+sed -i 's/Mar,North,159.5/Mar,North,1595/' kpi.csv && python3 dashboard.py
 ```
 
 ### Step 8
@@ -108,7 +112,7 @@ sed -i 's/Mar,North,161/Mar,North,1610/' kpi.csv && python3 dashboard.py
 Re-run validation 2 and 3 and confirm your checks CATCH the planted error.
 
 ```bash
-python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',d.revenue.sum(),'(was 1129)');print('North % of target',round(d[d.region=='North'].revenue.sum()/d[d.region=='North'].target.sum()*100,1),'%')"
+python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',round(d.revenue.sum(),1),'(was 3021.3)');print('North % of target',round(d[d.region=='North'].revenue.sum()/d[d.region=='North'].target.sum()*100,1),'%')"
 ```
 
 ### Step 9
@@ -116,7 +120,7 @@ python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('total now',d.rev
 Restore the correct value and confirm the dashboard returns to its validated state.
 
 ```bash
-sed -i 's/Mar,North,1610/Mar,North,161/' kpi.csv && python3 dashboard.py && python3 -c "import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())"
+sed -i 's/Mar,North,1595/Mar,North,159.5/' kpi.csv && python3 dashboard.py && python3 -c "import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())"
 ```
 
 ### Step 10
@@ -136,7 +140,7 @@ This lab ships with its own data — you do not have to type it in. See [`data/R
 
 ## Test it — expected result
 
-dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent methods, and North reports 111.9% of target. After the planted error the total jumps by roughly 1450 and North exceeds 250% of target — an impossible figure your validation flags immediately.
+dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent methods. After the planted error the total jumps to 4456.8 and North reports 276.9% of target — an impossible figure your validation catches immediately. Restoring the value returns the total to 3021.3.
 
 ## If it doesn't work
 
@@ -144,7 +148,7 @@ dashboard.png shows four panels built from 24 rows. Total revenue validates at 3
 |---|---|
 | The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | Panels overlap or the title is cut | Use plt.tight_layout(rect=[0,0,1,0.95]) so the suptitle gets its own space. |
-| sed did not change anything | Check the exact text with grep 'Mar,North' kpi.csv — sed needs a byte-exact match. |
+| sed did not change anything | sed needs a BYTE-EXACT match. Run grep 'Mar,North' kpi.csv and copy the value from the output — 159.5 is not the same string as 159.50 or 161. |
 | The % of target axis looks wrong | Confirm you summed target per region (3 months × the monthly target), not just one month's value. |
 
 ---
