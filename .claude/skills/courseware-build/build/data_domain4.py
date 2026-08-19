@@ -74,7 +74,7 @@ DOMAIN4 = [
             ("VALIDATION 2 — recalculate the headline total a second, independent way.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');a=d.revenue.sum();b=sum(d.groupby('region').revenue.sum());print('method A',a,'method B',b,'MATCH' if a==b else 'MISMATCH')\""),
             ("VALIDATION 3 — cross-validate the % of target figure against a hand calculation.",
-             "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('Central', round(d[d.region=='Central'].revenue.sum()/d[d.region=='Central'].target.sum()*100,1),'% expected 111.9')\""),
+             "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('Central', round(d[d.region=='Central'].revenue.sum()/d[d.region=='Central'].target.sum()*100,1),'% expected 102.9')\""),
             ("Now PLANT AN ERROR — corrupt one revenue value and rebuild the dashboard.",
              "sed -i 's/Mar,North,159.5/Mar,North,1595/' kpi.csv && python3 dashboard.py"),
             ("Re-run validation 2 and 3 and confirm your checks CATCH the planted error.",

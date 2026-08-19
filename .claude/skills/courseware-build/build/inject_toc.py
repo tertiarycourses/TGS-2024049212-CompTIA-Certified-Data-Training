@@ -80,7 +80,29 @@ def main():
         print("  [inject_toc] no TOC placeholder found in", docx_path); return
 
     # 5) build static TOC paragraphs, insert before placeholder, then delete it
+    #    The entries are wrapped in a REAL Word TOC field: the static paragraphs become
+    #    the field's cached result (so the page numbers are right in every renderer),
+    #    while Word/Google Docs can still refresh it with F9.
     anchor = placeholder._p
+    from docx.oxml.ns import qn as _qn
+    from docx.oxml import OxmlElement as _El
+
+    def _fld(kind, instr=None):
+        p_ = anchor.makeelement(_qn('w:p'), {})
+        r_ = _El('w:r')
+        fc = _El('w:fldChar'); fc.set(_qn('w:fldCharType'), kind)
+        r_.append(fc)
+        if instr is not None:
+            it = _El('w:instrText'); it.set(_qn('xml:space'), 'preserve'); it.text = instr
+            r2 = _El('w:r'); r2.append(it)
+            p_.append(r_); p_.append(r2)
+        else:
+            p_.append(r_)
+        return p_
+
+    # field BEGIN + instruction, then SEPARATE (the cached result follows)
+    anchor.addprevious(_fld('begin', ' TOC \\o "1-3" \\h \\z \\u '))
+    anchor.addprevious(_fld('separate'))
     GREY = RGBColor(0x33, 0x33, 0x33)
     for lvl, text, page in entries:
         new_p = anchor.makeelement(qn('w:p'), {})
@@ -97,6 +119,8 @@ def main():
         r.font.name = "Arial"
         r.bold = (lvl == 1)
         r.font.color.rgb = GREY
+    # field END — closes the TOC field around the cached entries above
+    anchor.addprevious(_fld('end'))
     anchor.getparent().remove(anchor)
 
     doc.save(docx_path)

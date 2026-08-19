@@ -707,7 +707,7 @@ Across 61 employees the mean is ~4978 but the median is only 4550. Removing the 
 - The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - mode returns several values — A dataset with no repeated value returns every value. pandas .mode() correctly returns a list — report it as 'no single mode'.
 - Variance looks enormous — Variance is in squared units. Report the standard deviation (its square root) instead, which is in dollars.
-- Only one row is flagged — That is correct — the dataset carries exactly one planted outlier (E999). Lower the threshold to |z| > 2 and note that nothing else appears, which is what a clean distribution looks like.
+- Only one row is flagged — That is correct — the dataset carries exactly one planted outlier (E999) at z ≈ 7.5. Nothing else appears at |z| > 3, which is what a clean distribution looks like.
 
 > **Note:** The same procedure, with the copy-paste commands, is in labs/lab-08/README.md in the course repository.
 
@@ -1041,7 +1041,7 @@ python3 dashboard.py
 6. VALIDATION 3 — cross-validate the % of target figure against a hand calculation.
 
    ```bash
-   python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('Central', round(d[d.region=='Central'].revenue.sum()/d[d.region=='Central'].target.sum()*100,1),'% expected 111.9')"
+   python3 -c "import pandas as pd;d=pd.read_csv('kpi.csv');print('Central', round(d[d.region=='Central'].revenue.sum()/d[d.region=='Central'].target.sum()*100,1),'% expected 102.9')"
    ```
 
 7. Now PLANT AN ERROR — corrupt one revenue value and rebuild the dashboard.

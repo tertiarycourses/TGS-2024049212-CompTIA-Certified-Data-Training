@@ -89,9 +89,9 @@ Then open the [Killercoda Ubuntu playground](https://killercoda.com/playgrounds/
 
 | Artifact | File |
 |---|---|
-| Trainer Slides (215 slides) | [`courseware/WSQ - CompTIA Certified Data+ Training-v5.1.pptx`](courseware/) |
+| Trainer Slides (214 slides) | [`courseware/WSQ - CompTIA Certified Data+ Training-v5.1.pptx`](courseware/) |
 | Lesson Plan (10 pp) | [`courseware/LP-WSQ - CompTIA Certified Data+ Training.docx`](courseware/) |
-| Learner Guide (44 pp) | [`courseware/LG-WSQ - CompTIA Certified Data+ Training.docx`](courseware/) |
+| Learner Guide (45 pp) | [`courseware/LG-WSQ - CompTIA Certified Data+ Training.docx`](courseware/) |
 | Learner Guide (Markdown) | [`LG-WSQ - CompTIA Certified Data+ Training.md`](LG-WSQ%20-%20CompTIA%20Certified%20Data+%20Training.md) |
 | Lab index | [`labs/README.md`](labs/README.md) |
 
