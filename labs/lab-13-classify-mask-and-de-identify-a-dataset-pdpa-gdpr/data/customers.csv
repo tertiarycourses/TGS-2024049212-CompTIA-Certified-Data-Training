@@ -1,0 +1,41 @@
+cust_id,name,nric,email,postal,dept,salary
+1,Daniel Abdullah,S5932906G,daniel.abdullah@example.sg,600123,Sales,4050
+2,Jun Hao Yeo,S6046775E,jun.yeo@example.sg,310045,Technology,5300
+3,Arjun Ismail,S4001144F,arjun.ismail@example.sg,529536,Finance,4500
+4,Yee Ling Tay,S8788162F,yee.tay@example.sg,018956,Marketing,4850
+5,Mei Sharma,S2200545C,mei.sharma@example.sg,159836,Operations,4050
+6,Daniel Singh,S9353089I,daniel.singh@example.sg,099253,Sales,4600
+7,Jun Hao Kumar,S6348411A,jun.kumar@example.sg,228095,Technology,6150
+8,Arjun Ee,S3510379I,arjun.ee@example.sg,760501,Finance,4950
+9,Yee Ling Nair,S1443240F,yee.nair@example.sg,520201,Marketing,4550
+10,Mei Chan,S9244657B,mei.chan@example.sg,469001,Operations,4000
+11,Daniel Raj,S4762056Z,daniel.raj@example.sg,129588,Sales,5050
+12,Jun Hao Ong,S4200675A,jun.ong@example.sg,738099,Technology,5600
+13,Arjun Koh,S6374929E,arjun.koh@example.sg,600123,Finance,4550
+14,Yee Ling Nur,S9211212G,yee.nur@example.sg,310045,Marketing,4300
+15,Mei Pillai,S5240303E,mei.pillai@example.sg,529536,Operations,4050
+16,Daniel Sim,S4445083G,daniel.sim@example.sg,018956,Sales,4150
+17,Jun Hao Menon,S7022190D,jun.menon@example.sg,159836,Technology,4750
+18,Arjun Foo,S2575257I,arjun.foo@example.sg,099253,Finance,4200
+19,Yee Ling Binte Rahman,S9099581F,yee.binte@example.sg,228095,Marketing,3950
+20,Mei Chua,S2138905I,mei.chua@example.sg,760501,Operations,4400
+21,Daniel Lee,S2744303B,daniel.lee@example.sg,520201,Sales,4400
+22,Jun Hao Ng,S5167530Z,jun.ng@example.sg,469001,Technology,6300
+23,Arjun Hassan,S5577111Z,arjun.hassan@example.sg,129588,Finance,5200
+24,Yee Ling Goh,S6606253G,yee.goh@example.sg,738099,Marketing,4000
+25,Mei Osman,S7631748J,mei.osman@example.sg,600123,Operations,3650
+26,Daniel Wong,S9129392H,daniel.wong@example.sg,310045,Sales,4900
+27,Jun Hao Reyes,S6781384G,jun.reyes@example.sg,529536,Technology,5200
+28,Arjun Lim,S4711739I,arjun.lim@example.sg,018956,Finance,4850
+29,Yee Ling Teo,S7815015Z,yee.teo@example.sg,159836,Marketing,4050
+30,Mei Tan,S8453584C,mei.tan@example.sg,099253,Operations,3850
+31,Daniel Abdullah,S4751610H,daniel.abdullah@example.sg,228095,Sales,4550
+32,Jun Hao Yeo,S1770698Z,jun.yeo@example.sg,760501,Technology,5400
+33,Arjun Ismail,S6913509G,arjun.ismail@example.sg,520201,Finance,4400
+34,Yee Ling Tay,S9928769B,yee.tay@example.sg,469001,Marketing,4200
+35,Mei Sharma,S5721963H,mei.sharma@example.sg,129588,Operations,4150
+36,Daniel Singh,S6154769C,daniel.singh@example.sg,738099,Sales,4450
+37,Jun Hao Kumar,S7906034I,jun.kumar@example.sg,600123,Technology,4750
+38,Arjun Ee,S8863862F,arjun.ee@example.sg,310045,Finance,4250
+39,Yee Ling Nair,S7021793J,yee.nair@example.sg,529536,Marketing,4250
+40,Mei Chan,S6090171B,mei.chan@example.sg,018956,Operations,3900

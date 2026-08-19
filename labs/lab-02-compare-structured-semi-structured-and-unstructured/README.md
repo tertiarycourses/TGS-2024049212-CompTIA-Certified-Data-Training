@@ -29,37 +29,13 @@ Three files (customers.csv, customers.json, notes.txt) plus a Python script that
 
 ### Step 1
 
-Create the lab folder.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-02-compare-structured-semi-structured-and-unstructured/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2
+mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-02-compare-structured-semi-structured-and-unstructured/data && for f in customers.csv customers.json notes.txt; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
-
-Write the STRUCTURED version — a delimited CSV with a fixed header and one record per line.
-
-```bash
-printf 'customer_id,name,city,spend\n1,Mei Tan,Singapore,240.50\n2,Ravi Kumar,Jurong,89.00\n' > customers.csv
-```
-
-### Step 3
-
-Write the SEMI-STRUCTURED version — JSON, which is self-describing and allows nested and ragged fields.
-
-```bash
-printf '[{"customer_id":1,"name":"Mei Tan","city":"Singapore","spend":240.50,"tags":["vip","repeat"]},{"customer_id":2,"name":"Ravi Kumar","city":"Jurong","spend":89.00}]' > customers.json
-```
-
-### Step 4
-
-Write the UNSTRUCTURED version — the same facts buried in prose, with no schema at all.
-
-```bash
-printf 'Mei Tan from Singapore spent about $240.50 with us this quarter. Ravi Kumar (Jurong) spent 89 dollars.\n' > notes.txt
-```
-
-### Step 5
 
 Query the CSV — three lines of code, because the structure is guaranteed.
 
@@ -67,7 +43,7 @@ Query the CSV — three lines of code, because the structure is guaranteed.
 python3 -c "import csv;print(sum(float(r['spend']) for r in csv.DictReader(open('customers.csv'))))"
 ```
 
-### Step 6
+### Step 3
 
 Query the JSON — still easy, and it carries the extra 'tags' field the CSV could not hold.
 
@@ -75,7 +51,7 @@ Query the JSON — still easy, and it carries the extra 'tags' field the CSV cou
 python3 -c "import json;d=json.load(open('customers.json'));print(sum(r['spend'] for r in d));print(d[0].get('tags'))"
 ```
 
-### Step 7
+### Step 4
 
 Try to query the unstructured text — you need a regular expression, and it is fragile.
 
@@ -83,7 +59,7 @@ Try to query the unstructured text — you need a regular expression, and it is 
 python3 -c "import re;t=open('notes.txt').read();print(re.findall(r'[$]?([0-9]+(?:[.][0-9]{2})?)\s*(?:dollars)?',t))"
 ```
 
-### Step 8
+### Step 5
 
 Compare the file sizes and record what each format cost you in query effort.
 
@@ -93,14 +69,25 @@ ls -l customers.csv customers.json notes.txt
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/customers.csv`](data/customers.csv) — 392 bytes
+- [`data/customers.json`](data/customers.json) — 1,452 bytes
+- [`data/notes.txt`](data/notes.txt) — 915 bytes
+
+---
+
 ## Test it — expected result
 
-The CSV and JSON both total 329.5. The JSON also returns ['vip','repeat'] — a field the CSV cannot represent. The regex over notes.txt returns extra noise, proving unstructured data needs parsing before analysis.
+The CSV and the JSON both total 2293.17 across 12 customers. The JSON also returns ['vip','repeat'] for the first record — a field the flat CSV cannot represent at all. The regex over notes.txt returns extra noise, proving unstructured text needs parsing before it can be analysed.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | JSONDecodeError | The shell ate a quote. Re-run the printf line exactly, or use nano customers.json and paste the JSON in. |
 | The regex returns '240.50' and '89' plus junk | That is the expected lesson — unstructured text has no guarantees. Tighten the pattern in RegexLab. |
 | KeyError: 'spend' | Your CSV header row is missing or misspelled. Run head -1 customers.csv to check it. |

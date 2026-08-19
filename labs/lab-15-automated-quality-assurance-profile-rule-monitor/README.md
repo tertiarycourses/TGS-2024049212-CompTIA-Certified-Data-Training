@@ -29,21 +29,13 @@ A reusable dq_check.py suite that scores five quality dimensions, exits non-zero
 
 ### Step 1
 
-Create the lab folder and today's clean feed.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-15-automated-quality-assurance-profile-rule-monitor/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab15 && cd ~/dataplus/lab15 && printf 'order_id,customer_id,order_date,amount,status\n1,101,2025-03-01,240.50,SHIPPED\n2,102,2025-03-01,89.00,SHIPPED\n3,103,2025-03-02,145.25,PENDING\n4,104,2025-03-02,310.00,SHIPPED\n' > feed_good.csv
+mkdir -p ~/dataplus/lab15 && cd ~/dataplus/lab15 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-15-automated-quality-assurance-profile-rule-monitor/data && for f in feed_good.csv feed_bad.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
-
-Create tomorrow's BROKEN feed — a null, a duplicate id, a negative amount and an invalid status.
-
-```bash
-printf 'order_id,customer_id,order_date,amount,status\n5,105,2025-03-03,120.00,SHIPPED\n6,,2025-03-03,75.00,SHIPPED\n6,107,2025-03-03,-45.00,SHIPPED\n8,108,2025-03-03,99.00,TELEPORTED\n' > feed_bad.csv
-```
-
-### Step 3
 
 Write the quality suite — one function per quality dimension.
 
@@ -86,7 +78,7 @@ EOF
 echo written
 ```
 
-### Step 4
+### Step 3
 
 Run the suite against the GOOD feed — it must pass all five and exit 0.
 
@@ -94,7 +86,7 @@ Run the suite against the GOOD feed — it must pass all five and exit 0.
 python3 dq_check.py feed_good.csv; echo "exit code: $?"
 ```
 
-### Step 5
+### Step 4
 
 Run it against the BROKEN feed — it must fail four dimensions and exit 1.
 
@@ -102,7 +94,7 @@ Run it against the BROKEN feed — it must fail four dimensions and exit 1.
 python3 dq_check.py feed_bad.csv; echo "exit code: $?"
 ```
 
-### Step 6
+### Step 5
 
 This exit code is what makes it MONITORING rather than a report — a scheduler can now block a bad load.
 
@@ -110,7 +102,7 @@ This exit code is what makes it MONITORING rather than a report — a scheduler 
 python3 dq_check.py feed_bad.csv > /dev/null 2>&1 && echo 'LOAD APPROVED' || echo 'LOAD BLOCKED - do not ingest'
 ```
 
-### Step 7
+### Step 6
 
 Save a dated quality report so you build a quality history, not just a snapshot.
 
@@ -118,7 +110,7 @@ Save a dated quality report so you build a quality history, not just a snapshot.
 python3 dq_check.py feed_good.csv > dq_report_$(date +%Y%m%d).txt; ls -1 dq_report_*.txt
 ```
 
-### Step 8
+### Step 7
 
 Add the lineage note: record the source, the owner, the rule version and the run date. This is the documentation half of the exam's data-management objective.
 
@@ -128,14 +120,25 @@ printf 'source: orders feed (daily)\nowner: Sales Ops\nsteward: Data Quality tea
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/daily-feeds.xlsx`](data/daily-feeds.xlsx) — 8,280 bytes
+- [`data/feed_bad.csv`](data/feed_bad.csv) — 1,416 bytes
+- [`data/feed_good.csv`](data/feed_good.csv) — 1,415 bytes
+
+---
+
 ## Test it — expected result
 
-feed_good.csv scores 5/5 and exits 0. feed_bad.csv fails completeness, uniqueness, validity and consistency — 1/5 — and exits 1, so the 'LOAD BLOCKED' branch fires.
+feed_good.csv (40 rows) scores 5/5 and exits 0. feed_bad.csv (40 rows) fails ALL FIVE dimensions — 2 nulls, 2 duplicate order_ids, 2 negative amounts, 2 invalid status values and 1 unparseable date — so it scores 0/5, exits 1, and the 'LOAD BLOCKED' branch fires.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | The heredoc breaks on the f-strings | Ensure you used <<'EOF' with the quotes — that stops the shell expanding anything inside. |
 | Exit code is always 0 | You ran it inside another command. Test with python3 dq_check.py feed_bad.csv; echo $? on its own line. |
 | accuracy fails on the good feed | Your dates are not ISO format. pandas parses YYYY-MM-DD reliably — normalise the feed first. |

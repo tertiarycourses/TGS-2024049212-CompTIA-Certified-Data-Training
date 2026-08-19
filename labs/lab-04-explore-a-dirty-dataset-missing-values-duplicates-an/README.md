@@ -29,30 +29,13 @@ A data-quality profile report quantifying null counts per column, duplicate rows
 
 ### Step 1
 
-Create the lab folder and install pandas if it is not already present.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && pip3 install pandas --quiet
+mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data && for f in sales_dirty.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
-
-Create the dirty dataset — note the blank cells, the repeated row, and the 99999 spend.
-
-```bash
-cat > sales_dirty.csv <<'EOF'
-order_id,customer,city,spend,order_date
-1,Mei Tan,Singapore,240.50,2025-03-01
-2,Ravi Kumar,Jurong,89.00,2025-03-02
-3,Siti Nur,,145.25,2025-03-02
-4,Mei Tan,Singapore,240.50,2025-03-01
-5,John Lee,Tampines,,2025-03-04
-6,Wei Ming,Bedok,99999.00,2025-03-05
-7,Siti Nur,Woodlands,310.00,
-EOF
-```
-
-### Step 3
 
 Load it and look at the shape and dtypes first — always know how many records you started with.
 
@@ -60,7 +43,7 @@ Load it and look at the shape and dtypes first — always know how many records 
 python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.shape);print(d.dtypes)"
 ```
 
-### Step 4
+### Step 3
 
 Count MISSING VALUES per column — the exam's first exploration task.
 
@@ -68,7 +51,7 @@ Count MISSING VALUES per column — the exam's first exploration task.
 python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.isnull().sum())"
 ```
 
-### Step 5
+### Step 4
 
 Count DUPLICATE rows and show which ones they are.
 
@@ -76,15 +59,15 @@ Count DUPLICATE rows and show which ones they are.
 python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print('dupes:',d.duplicated().sum());print(d[d.duplicated(keep=False)])"
 ```
 
-### Step 6
+### Step 5
 
 Detect OUTLIERS with a z-score — any |z| above 3 is the standard flag.
 
 ```bash
-python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');s=d['spend'].dropna();z=(s-s.mean())/s.std();print(d.loc[z[abs(z)>1.5].index])"
+python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');s=pd.to_numeric(d['spend'],errors='coerce');z=(s-s.mean())/s.std();print(d.loc[z[abs(z)>3].index])"
 ```
 
-### Step 7
+### Step 6
 
 Get the descriptive summary and note how badly the 99999 distorts the mean versus the median.
 
@@ -92,7 +75,7 @@ Get the descriptive summary and note how badly the 99999 distorts the mean versu
 python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d['spend'].describe());print('median',d['spend'].median())"
 ```
 
-### Step 8
+### Step 7
 
 Write the profile report to a file so the cleaning lab can be measured against it.
 
@@ -102,17 +85,27 @@ python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');open('profile.t
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/sales_dirty.csv`](data/sales_dirty.csv) — 2,656 bytes
+- [`data/sales_dirty.xlsx`](data/sales_dirty.xlsx) — 7,211 bytes
+
+---
+
 ## Test it — expected result
 
-Your profile reports 7 rows, 1 null city, 1 null spend, 1 null order_date, 1 duplicate row, and one extreme outlier (99999.00). The mean spend (~16720) is wildly above the median (~240.50) — proof the outlier is distorting it.
+Your profile reports 63 rows, 4 null cities, 3 null spends, 2 null order_dates and 3 duplicate rows. Two extreme outliers (99999.00 and 87500.00) are flagged at |z| > 3. The mean spend (~3348) is more than fifteen times the median (~219) — proof the outliers are distorting the mean.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | ModuleNotFoundError: pandas | Run pip3 install pandas. On Killercoda add --break-system-packages if pip refuses. |
 | The heredoc pasted as one line | Paste the cat > ... <<'EOF' block line by line, or use nano sales_dirty.csv instead. |
-| z-score flags nothing | With only 6 values the standard deviation is huge. That is why the lab uses a 1.5 threshold — explain this effect in your report. |
+| z-score flags nothing | The spend column imported as text because of the blank cells. Wrap it in pd.to_numeric(..., errors='coerce') first, then recompute z. |
 
 ---
 

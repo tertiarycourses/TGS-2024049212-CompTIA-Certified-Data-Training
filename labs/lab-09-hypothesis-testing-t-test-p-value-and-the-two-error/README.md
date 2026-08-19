@@ -29,25 +29,17 @@ A completed hypothesis test: stated H0/H1, computed t-statistic and p-value, an 
 
 ### Step 1
 
-Create the lab folder and install scipy.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && pip3 install scipy pandas --quiet
+mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data && for f in abtest.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
 
-Create the A/B test dataset — group A is the old page, group B the new one.
-
-```bash
-printf 'group,order_value\nA,42\nA,38\nA,45\nA,40\nA,37\nA,44\nA,41\nA,39\nB,48\nB,52\nB,47\nB,50\nB,53\nB,49\nB,51\nB,46\n' > abtest.csv
-```
-
-### Step 3
-
 STATE THE HYPOTHESES before you look at any result — this is the discipline the exam tests.  H0: there is no difference in mean order value.  H1: the new page has a higher mean order value.
 
-### Step 4
+### Step 3
 
 Look at the group means first — a difference here is necessary but NOT sufficient.
 
@@ -55,7 +47,7 @@ Look at the group means first — a difference here is necessary but NOT suffici
 python3 -c "import pandas as pd;d=pd.read_csv('abtest.csv');print(d.groupby('group').order_value.agg(['count','mean','std']).round(2))"
 ```
 
-### Step 5
+### Step 4
 
 Run the two-sample t-test and read the p-value.
 
@@ -63,7 +55,7 @@ Run the two-sample t-test and read the p-value.
 python3 -c "import pandas as pd;from scipy import stats;d=pd.read_csv('abtest.csv');a=d[d.group=='A'].order_value;b=d[d.group=='B'].order_value;t,p=stats.ttest_ind(a,b);print('t =',round(t,4));print('p =',round(p,6))"
 ```
 
-### Step 6
+### Step 5
 
 Apply the 0.05 decision rule explicitly.
 
@@ -71,7 +63,7 @@ Apply the 0.05 decision rule explicitly.
 python3 -c "import pandas as pd;from scipy import stats;d=pd.read_csv('abtest.csv');a=d[d.group=='A'].order_value;b=d[d.group=='B'].order_value;t,p=stats.ttest_ind(a,b);print('REJECT H0 - the difference is statistically significant' if p<0.05 else 'FAIL TO REJECT H0')"
 ```
 
-### Step 7
+### Step 6
 
 Compute the 95% confidence interval for the difference so you can report a range, not just a verdict.
 
@@ -79,24 +71,34 @@ Compute the 95% confidence interval for the difference so you can report a range
 python3 -c "import pandas as pd,numpy as np;from scipy import stats;d=pd.read_csv('abtest.csv');a=d[d.group=='A'].order_value;b=d[d.group=='B'].order_value;diff=b.mean()-a.mean();se=np.sqrt(a.var()/len(a)+b.var()/len(b));print('diff',round(diff,2),'95% CI',(round(diff-1.96*se,2),round(diff+1.96*se,2)))"
 ```
 
-### Step 8
+### Step 7
 
 Now the error-type question. Write down: if you reject H0 and you are WRONG, which error is that (Type I) and what does it cost the business? If you fail to reject and you are wrong (Type II), what does that cost?
 
-### Step 9
+### Step 8
 
 Write the one-paragraph recommendation a manager could act on — no statistics jargon.
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/abtest.csv`](data/abtest.csv) — 1,088 bytes
+- [`data/abtest.xlsx`](data/abtest.xlsx) — 6,533 bytes
+
+---
+
 ## Test it — expected result
 
-The t-test returns p well below 0.05 (approximately 0.000002), so you REJECT H0. Group B averages about 49.5 versus 40.75 for group A — a lift of roughly 8.75, with a confidence interval that excludes zero.
+With 60 observations per group the t-test returns t ≈ -11.3 and p ≈ 1.9e-20, far below 0.05, so you REJECT H0. Group B averages about 49.65 against 41.14 for group A — a lift of roughly 8.5, with a 95% confidence interval that excludes zero.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | ModuleNotFoundError: scipy | Run pip3 install scipy, adding --break-system-packages if Killercoda's pip refuses. |
 | p-value is nan | One group has fewer than two values or zero variance. Check your CSV loaded all 16 rows with d.shape. |
 | The result feels too clean | It is a teaching dataset with clean separation. Ask the trainer for the noisy variant to see a borderline p-value. |

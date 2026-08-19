@@ -21,29 +21,29 @@ DOMAIN2 = [
         services="Killercoda Ubuntu, Python 3, pandas",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and install pandas if it is not already present.",
-             "mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && pip3 install pandas --quiet"),
-            ("Create the dirty dataset — note the blank cells, the repeated row, and the 99999 spend.",
-             "cat > sales_dirty.csv <<'EOF'\norder_id,customer,city,spend,order_date\n1,Mei Tan,Singapore,240.50,2025-03-01\n2,Ravi Kumar,Jurong,89.00,2025-03-02\n3,Siti Nur,,145.25,2025-03-02\n4,Mei Tan,Singapore,240.50,2025-03-01\n5,John Lee,Tampines,,2025-03-04\n6,Wei Ming,Bedok,99999.00,2025-03-05\n7,Siti Nur,Woodlands,310.00,\nEOF"),
-            ("Load it and look at the shape and dtypes first — always know how many records you started with.",
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data && for f in sales_dirty.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+                        ("Load it and look at the shape and dtypes first — always know how many records you started with.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.shape);print(d.dtypes)\""),
             ("Count MISSING VALUES per column — the exam's first exploration task.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.isnull().sum())\""),
             ("Count DUPLICATE rows and show which ones they are.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');print('dupes:',d.duplicated().sum());print(d[d.duplicated(keep=False)])\""),
             ("Detect OUTLIERS with a z-score — any |z| above 3 is the standard flag.",
-             "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');s=d['spend'].dropna();z=(s-s.mean())/s.std();print(d.loc[z[abs(z)>1.5].index])\""),
+             "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');s=pd.to_numeric(d['spend'],errors='coerce');z=(s-s.mean())/s.std();print(d.loc[z[abs(z)>3].index])\""),
             ("Get the descriptive summary and note how badly the 99999 distorts the mean versus the median.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d['spend'].describe());print('median',d['spend'].median())\""),
             ("Write the profile report to a file so the cleaning lab can be measured against it.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('sales_dirty.csv');open('profile.txt','w').write(str(d.isnull().sum())+'\\ndupes: '+str(d.duplicated().sum())+'\\nmean: '+str(d.spend.mean())+'\\nmedian: '+str(d.spend.median()))\" && cat profile.txt"),
         ],
-        test=("Your profile reports 7 rows, 1 null city, 1 null spend, 1 null order_date, 1 duplicate row, and one "
-              "extreme outlier (99999.00). The mean spend (~16720) is wildly above the median (~240.50) — proof the outlier is distorting it."),
+        test=("Your profile reports 63 rows, 4 null cities, 3 null spends, 2 null order_dates and 3 duplicate rows. "
+              "Two extreme outliers (99999.00 and 87500.00) are flagged at |z| > 3. The mean spend (~3348) is more than "
+              "fifteen times the median (~219) — proof the outliers are distorting the mean."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("ModuleNotFoundError: pandas", "Run pip3 install pandas. On Killercoda add --break-system-packages if pip refuses."),
             ("The heredoc pasted as one line", "Paste the cat > ... <<'EOF' block line by line, or use nano sales_dirty.csv instead."),
-            ("z-score flags nothing", "With only 6 values the standard deviation is huge. That is why the lab uses a 1.5 threshold — explain this effect in your report."),
+            ("z-score flags nothing", "The spend column imported as text because of the blank cells. Wrap it in pd.to_numeric(..., errors='coerce') first, then recompute z."),
         ],
     ),
     dict(
@@ -58,7 +58,8 @@ DOMAIN2 = [
         services="RegexLab (https://alfredang.github.io/regexgenerator/), Killercoda Ubuntu, Python 3, pandas",
         env="https://alfredang.github.io/regexgenerator/",
         steps=[
-            ("Open RegexLab in your browser and clear the sample test string.", ""),
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data && for f in contacts.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
             ("Paste these three messy contact records into the Test String box:  Mei Tan <mei.tan@example.sg> +65 9123 4567", ""),
             ("Build the EMAIL pattern and watch the match count update live. Confirm it matches all three records.",
              "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"),
@@ -67,18 +68,18 @@ DOMAIN2 = [
             ("Build the NAME pattern — everything before the first angle bracket, trimmed.",
              "^([A-Za-z ]+?)\\s*<"),
             ("Use the Substitution panel to confirm your pattern replaces cleanly before you trust it in code.", ""),
-            ("Switch to Killercoda and create the messy source file.",
-             "mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5 && cat > contacts.csv <<'EOF'\nid,contact\n1,Mei Tan <mei.tan@example.sg> +65 9123 4567\n2,Ravi Kumar <ravi.k@example.sg> 81234567\n3,Siti Nur <siti@example.sg> +65 6100 0613\nEOF"),
-            ("Apply the SAME patterns you validated in RegexLab, using pandas str.extract.",
+                        ("Apply the SAME patterns you validated in RegexLab, using pandas str.extract.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('contacts.csv');d['name']=d.contact.str.extract(r'^([A-Za-z ]+?)\\s*<');d['email']=d.contact.str.extract(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})');d['phone']=d.contact.str.extract(r'((?:\\+65 ?)?[689][0-9]{3} ?[0-9]{4})');print(d[['id','name','email','phone']])\""),
             ("Normalise the phone format — strip +65 and spaces so every value has the same shape.",
              "python3 -c \"import pandas as pd,re;d=pd.read_csv('contacts.csv');d['phone']=d.contact.str.extract(r'((?:\\+65 ?)?[689][0-9]{3} ?[0-9]{4})')[0].str.replace(r'[^0-9]','',regex=True).str[-8:];print(d[['id','phone']])\""),
             ("Save the cleaned, parsed output.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('contacts.csv');d['name']=d.contact.str.extract(r'^([A-Za-z ]+?)\\s*<');d['email']=d.contact.str.extract(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})');d['phone']=d.contact.str.extract(r'((?:\\+65 ?)?[689][0-9]{3} ?[0-9]{4})')[0].str.replace(r'[^0-9]','',regex=True).str[-8:];d[['id','name','email','phone']].to_csv('contacts_clean.csv',index=False)\" && cat contacts_clean.csv"),
         ],
-        test=("contacts_clean.csv holds three rows with name, email and an 8-digit phone each — 91234567, 81234567 "
-              "and 61000613. No angle brackets, no +65 prefixes, no leftover spaces."),
+        test=("contacts_clean.csv holds 30 rows, each with a name, an email and a normalised 8-digit phone. "
+              "All 30 rows match all three patterns — no NaN in any column, no angle brackets, no +65 prefixes "
+              "and no leftover spaces."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("RegexLab shows 0 matches", "Check the flags — you usually want 'g' (global) so every record is matched, not just the first."),
             ("extract returns NaN", "pandas needs a capturing group. Confirm your pattern has parentheses around the part you want."),
             ("The phone keeps its +65", "The .str.replace step is what strips it. Confirm regex=True is set, then take the last 8 characters."),
@@ -96,12 +97,11 @@ DOMAIN2 = [
         services="IP Calculator (https://alfredang.github.io/ipcalculator/), Killercoda Ubuntu, Python 3, ipaddress module",
         env="https://alfredang.github.io/ipcalculator/",
         steps=[
-            ("Open the IP Calculator in your browser.", ""),
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data && for f in sites.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
             ("Enter 192.168.10.0/24 and record the derived values: network, broadcast, usable host count and mask.", ""),
             ("Repeat for 10.0.5.0/22 and 172.16.8.0/29 — note how the usable-host count changes with the prefix.", ""),
-            ("Switch to Killercoda and create the source dataset of raw CIDR strings.",
-             "mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && printf 'site,cidr\\nHQ,192.168.10.0/24\\nBranch,10.0.5.0/22\\nDMZ,172.16.8.0/29\\n' > sites.csv"),
-            ("Derive the same four fields in code — this is the DERIVED VARIABLE technique from the exam objectives.",
+                        ("Derive the same four fields in code — this is the DERIVED VARIABLE technique from the exam objectives.",
              "python3 -c \"import pandas as pd,ipaddress as ip;d=pd.read_csv('sites.csv');n=d.cidr.map(ip.ip_network);d['network']=[str(x.network_address) for x in n];d['broadcast']=[str(x.broadcast_address) for x in n];d['usable_hosts']=[x.num_addresses-2 for x in n];d['mask']=[str(x.netmask) for x in n];print(d)\""),
             ("Compare every derived value against what the IP Calculator gave you — they must match exactly.", ""),
             ("Decide the storage trade-off the exam asks about: store the derived columns (fast reads, more space) "
@@ -112,6 +112,7 @@ DOMAIN2 = [
         test=("The code and the IP Calculator agree: /24 gives 254 usable hosts, /22 gives 1022, and /29 gives 6. "
               "sites_enriched.csv carries the derived columns alongside the original CIDR."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("ValueError: has host bits set", "The address is not a valid network address for that prefix. Use ip_network(x, strict=False) or correct the CIDR."),
             ("usable_hosts is negative for /31 or /32", "Those prefixes have no usable host range by the -2 convention. Note this edge case in your report."),
             ("The numbers disagree with the calculator", "Confirm you entered the same prefix length in both. A /22 is not a /24."),
@@ -129,15 +130,9 @@ DOMAIN2 = [
         services="Killercoda Ubuntu, SQLite 3, SQL joins, Python 3/pandas",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and the three source extracts.",
-             "mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7"),
-            ("Source A — the customer master (note: customer 4 appears here only).",
-             "printf 'customer_id,name,region\\n1,Mei Tan,Central\\n2,Ravi Kumar,West\\n3,Siti Nur,North\\n4,John Lee,East\\n' > customers.csv"),
-            ("Source B — the order transactions (note: customer 4 has no orders; customer 5 has orders but no master record).",
-             "printf 'order_id,customer_id,amount\\n100,1,240.50\\n101,2,89.00\\n102,1,120.00\\n103,3,310.00\\n104,5,55.00\\n' > orders.csv"),
-            ("Source C — the regional targets used to enrich the result.",
-             "printf 'region,target\\nCentral,500\\nWest,300\\nNorth,400\\nEast,200\\n' > targets.csv"),
-            ("Load all three into SQLite in one go.",
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data && for f in customers.csv orders.csv targets.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+                                                ("Load all three into SQLite in one go.",
              "sqlite3 integrate.db <<'EOF'\n.mode csv\n.import customers.csv customers\n.import orders.csv orders\n.import targets.csv targets\n.headers on\nSELECT COUNT(*) AS customers FROM customers; SELECT COUNT(*) AS orders FROM orders;\nEOF"),
             ("INNER JOIN — returns only matched rows. Count them and note what you silently lost.",
              "sqlite3 -header -column integrate.db \"SELECT COUNT(*) AS inner_rows FROM orders o JOIN customers c ON c.customer_id=o.customer_id;\""),
@@ -151,9 +146,11 @@ DOMAIN2 = [
              "sqlite3 -header -column integrate.db \"CREATE TABLE regional AS SELECT c.region, COUNT(o.order_id) AS orders, COALESCE(SUM(o.amount),0) AS revenue, t.target, ROUND(COALESCE(SUM(o.amount),0)*100.0/t.target,1) AS pct_of_target FROM customers c LEFT JOIN orders o ON c.customer_id=o.customer_id JOIN targets t ON t.region=c.region GROUP BY c.region,t.target; SELECT * FROM regional;\""),
             ("Reconcile: explain in one line why the inner join returned 4 rows but there are 5 orders.", ""),
         ],
-        test=("The inner join returns 4 rows, not 5 — order 104 is dropped because customer 5 has no master record. "
-              "The regional table shows East at 0% of target (John Lee ordered nothing) and Central above 70%."),
+        test=("The sources hold 31 customers and 81 orders. The INNER JOIN returns only 80 rows — order 999 is dropped "
+              "because customer 77 has no master record. Four customers have no orders at all and survive only via the "
+              "LEFT JOIN. The regional table reports every region's revenue against its target."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("'.import' left the header as a data row", "Older SQLite lacks --skip 1. Delete it after import: DELETE FROM customers WHERE customer_id='customer_id';"),
             ("SUM returns NULL for East", "That is correct SQL — no rows to sum. COALESCE(...,0) is what turns it into a reportable zero."),
             ("Amounts sort wrongly", "CSV import types everything as TEXT. Use CAST(amount AS REAL) or create the table with explicit types first."),

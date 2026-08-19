@@ -119,73 +119,67 @@ A normalised 3NF SQLite database (customers, products, orders) with enforced for
 
 **Step-by-step**
 
-1. Open the Killercoda Ubuntu playground in your browser and confirm SQLite is available.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   sqlite3 --version
+   mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data && for f in customers.csv products.csv orders.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Create the lab folder and open a new database file.
-
-   ```bash
-   mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1 && sqlite3 sales.db
-   ```
-
-3. Turn foreign-key enforcement ON — SQLite leaves it off by default, which is the single most common cause of orphaned rows.
+2. Turn foreign-key enforcement ON — SQLite leaves it off by default, which is the single most common cause of orphaned rows.
 
    ```bash
    PRAGMA foreign_keys = ON;
    ```
 
-4. Create the customers table with a primary key and typed columns (INTEGER, TEXT, DATE).
+3. Create the customers table with a primary key and typed columns (INTEGER, TEXT, DATE).
 
    ```bash
    CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT UNIQUE, joined DATE);
    ```
 
-5. Create the products table — note REAL for currency and the CHECK constraint enforcing domain integrity.
+4. Create the products table — note REAL for currency and the CHECK constraint enforcing domain integrity.
 
    ```bash
    CREATE TABLE products (product_id INTEGER PRIMARY KEY, name TEXT NOT NULL, unit_price REAL CHECK (unit_price >= 0));
    ```
 
-6. Create the orders fact table carrying TWO foreign keys with ON DELETE CASCADE.
+5. Create the orders fact table carrying TWO foreign keys with ON DELETE CASCADE.
 
    ```bash
    CREATE TABLE orders (order_id INTEGER PRIMARY KEY, customer_id INTEGER REFERENCES customers(customer_id) ON DELETE CASCADE, product_id INTEGER REFERENCES products(product_id), qty INTEGER NOT NULL, order_date DATE);
    ```
 
-7. Insert reference data into the two dimension tables.
+6. Import the three CSV extracts into the tables you just created.
 
    ```bash
-   INSERT INTO customers VALUES (1,'Mei','Tan','mei.tan@example.sg','2025-01-14'),(2,'Ravi','Kumar','ravi.k@example.sg','2025-02-03');
+   sqlite3 sales.db ".mode csv" ".import --skip 1 customers.csv customers" ".import --skip 1 products.csv products" ".import --skip 1 orders.csv orders" "SELECT COUNT(*) FROM customers; SELECT COUNT(*) FROM products; SELECT COUNT(*) FROM orders;"
    ```
 
-8. Insert the product rows.
+7. Insert the product rows.
 
    ```bash
    INSERT INTO products VALUES (10,'Wireless Mouse',24.90),(11,'USB-C Hub',59.00);
    ```
 
-9. Insert valid orders that respect both foreign keys.
+8. Insert valid orders that respect both foreign keys.
 
    ```bash
    INSERT INTO orders VALUES (100,1,10,2,'2025-03-01'),(101,2,11,1,'2025-03-02');
    ```
 
-10. ATTACK 1 — try to insert an order for a customer who does not exist. This MUST be rejected.
+9. ATTACK 1 — try to insert an order for a customer who does not exist. This MUST be rejected.
 
    ```bash
    INSERT INTO orders VALUES (102,999,10,1,'2025-03-03');
    ```
 
-11. ATTACK 2 — delete customer 1 and watch the cascade remove their orders, leaving nothing orphaned.
+10. ATTACK 2 — delete customer 1 and watch the cascade remove their orders, leaving nothing orphaned.
 
    ```bash
    DELETE FROM customers WHERE customer_id = 1; SELECT * FROM orders;
    ```
 
-12. Run a join across all three tables to confirm the schema answers a real business question.
+11. Run a join across all three tables to confirm the schema answers a real business question.
 
    ```bash
    SELECT c.first_name, p.name, o.qty, o.qty*p.unit_price AS line_total FROM orders o JOIN customers c ON c.customer_id=o.customer_id JOIN products p ON p.product_id=o.product_id;
@@ -194,10 +188,11 @@ A normalised 3NF SQLite database (customers, products, orders) with enforced for
 
 **Test it — the expected result**
 
-Attack 1 fails with 'FOREIGN KEY constraint failed' and attack 2 removes order 100 automatically. The final join returns one row (Ravi · USB-C Hub · 1 · 59.0).
+The three tables import 40 customers, 10 products and 120 orders. Attack 1 fails with 'FOREIGN KEY constraint failed'. Attack 2 deletes customer 1 AND cascades to their 2 orders, so the order count drops from 120 to 118. The final join returns 118 priced order lines.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - The orphan insert SUCCEEDED — You forgot PRAGMA foreign_keys = ON. It resets on every new connection — re-run it after reopening sqlite3.
 - 'no such table' error — You are in a different database file. Run .databases inside sqlite3 to confirm you opened sales.db.
 - The cascade did not fire — ON DELETE CASCADE only works with foreign keys enforced. Re-check the PRAGMA, then re-create the orders table.
@@ -221,49 +216,31 @@ Three files (customers.csv, customers.json, notes.txt) plus a Python script that
 
 **Step-by-step**
 
-1. Create the lab folder.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-02-compare-structured-semi-structured-and-unstructured/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2
+   mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-02-compare-structured-semi-structured-and-unstructured/data && for f in customers.csv customers.json notes.txt; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Write the STRUCTURED version — a delimited CSV with a fixed header and one record per line.
-
-   ```bash
-   printf 'customer_id,name,city,spend\n1,Mei Tan,Singapore,240.50\n2,Ravi Kumar,Jurong,89.00\n' > customers.csv
-   ```
-
-3. Write the SEMI-STRUCTURED version — JSON, which is self-describing and allows nested and ragged fields.
-
-   ```bash
-   printf '[{"customer_id":1,"name":"Mei Tan","city":"Singapore","spend":240.50,"tags":["vip","repeat"]},{"customer_id":2,"name":"Ravi Kumar","city":"Jurong","spend":89.00}]' > customers.json
-   ```
-
-4. Write the UNSTRUCTURED version — the same facts buried in prose, with no schema at all.
-
-   ```bash
-   printf 'Mei Tan from Singapore spent about $240.50 with us this quarter. Ravi Kumar (Jurong) spent 89 dollars.\n' > notes.txt
-   ```
-
-5. Query the CSV — three lines of code, because the structure is guaranteed.
+2. Query the CSV — three lines of code, because the structure is guaranteed.
 
    ```bash
    python3 -c "import csv;print(sum(float(r['spend']) for r in csv.DictReader(open('customers.csv'))))"
    ```
 
-6. Query the JSON — still easy, and it carries the extra 'tags' field the CSV could not hold.
+3. Query the JSON — still easy, and it carries the extra 'tags' field the CSV could not hold.
 
    ```bash
    python3 -c "import json;d=json.load(open('customers.json'));print(sum(r['spend'] for r in d));print(d[0].get('tags'))"
    ```
 
-7. Try to query the unstructured text — you need a regular expression, and it is fragile.
+4. Try to query the unstructured text — you need a regular expression, and it is fragile.
 
    ```bash
    python3 -c "import re;t=open('notes.txt').read();print(re.findall(r'[$]?([0-9]+(?:[.][0-9]{2})?)\s*(?:dollars)?',t))"
    ```
 
-8. Compare the file sizes and record what each format cost you in query effort.
+5. Compare the file sizes and record what each format cost you in query effort.
 
    ```bash
    ls -l customers.csv customers.json notes.txt
@@ -272,10 +249,11 @@ Three files (customers.csv, customers.json, notes.txt) plus a Python script that
 
 **Test it — the expected result**
 
-The CSV and JSON both total 329.5. The JSON also returns ['vip','repeat'] — a field the CSV cannot represent. The regex over notes.txt returns extra noise, proving unstructured data needs parsing before analysis.
+The CSV and the JSON both total 2293.17 across 12 customers. The JSON also returns ['vip','repeat'] for the first record — a field the flat CSV cannot represent at all. The regex over notes.txt returns extra noise, proving unstructured text needs parsing before it can be analysed.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - JSONDecodeError — The shell ate a quote. Re-run the printf line exactly, or use nano customers.json and paste the JSON in.
 - The regex returns '240.50' and '89' plus junk — That is the expected lesson — unstructured text has no guarantees. Tighten the pattern in RegexLab.
 - KeyError: 'spend' — Your CSV header row is missing or misspelled. Run head -1 customers.csv to check it.
@@ -357,58 +335,43 @@ A data-quality profile report quantifying null counts per column, duplicate rows
 
 **Step-by-step**
 
-1. Create the lab folder and install pandas if it is not already present.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && pip3 install pandas --quiet
+   mkdir -p ~/dataplus/lab4 && cd ~/dataplus/lab4 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-04-explore-a-dirty-dataset-missing-values-duplicates-an/data && for f in sales_dirty.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Create the dirty dataset — note the blank cells, the repeated row, and the 99999 spend.
-
-   ```bash
-   cat > sales_dirty.csv <<'EOF'
-order_id,customer,city,spend,order_date
-1,Mei Tan,Singapore,240.50,2025-03-01
-2,Ravi Kumar,Jurong,89.00,2025-03-02
-3,Siti Nur,,145.25,2025-03-02
-4,Mei Tan,Singapore,240.50,2025-03-01
-5,John Lee,Tampines,,2025-03-04
-6,Wei Ming,Bedok,99999.00,2025-03-05
-7,Siti Nur,Woodlands,310.00,
-EOF
-   ```
-
-3. Load it and look at the shape and dtypes first — always know how many records you started with.
+2. Load it and look at the shape and dtypes first — always know how many records you started with.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.shape);print(d.dtypes)"
    ```
 
-4. Count MISSING VALUES per column — the exam's first exploration task.
+3. Count MISSING VALUES per column — the exam's first exploration task.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d.isnull().sum())"
    ```
 
-5. Count DUPLICATE rows and show which ones they are.
+4. Count DUPLICATE rows and show which ones they are.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print('dupes:',d.duplicated().sum());print(d[d.duplicated(keep=False)])"
    ```
 
-6. Detect OUTLIERS with a z-score — any |z| above 3 is the standard flag.
+5. Detect OUTLIERS with a z-score — any |z| above 3 is the standard flag.
 
    ```bash
-   python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');s=d['spend'].dropna();z=(s-s.mean())/s.std();print(d.loc[z[abs(z)>1.5].index])"
+   python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');s=pd.to_numeric(d['spend'],errors='coerce');z=(s-s.mean())/s.std();print(d.loc[z[abs(z)>3].index])"
    ```
 
-7. Get the descriptive summary and note how badly the 99999 distorts the mean versus the median.
+6. Get the descriptive summary and note how badly the 99999 distorts the mean versus the median.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');print(d['spend'].describe());print('median',d['spend'].median())"
    ```
 
-8. Write the profile report to a file so the cleaning lab can be measured against it.
+7. Write the profile report to a file so the cleaning lab can be measured against it.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('sales_dirty.csv');open('profile.txt','w').write(str(d.isnull().sum())+'\ndupes: '+str(d.duplicated().sum())+'\nmean: '+str(d.spend.mean())+'\nmedian: '+str(d.spend.median()))" && cat profile.txt
@@ -417,13 +380,14 @@ EOF
 
 **Test it — the expected result**
 
-Your profile reports 7 rows, 1 null city, 1 null spend, 1 null order_date, 1 duplicate row, and one extreme outlier (99999.00). The mean spend (~16720) is wildly above the median (~240.50) — proof the outlier is distorting it.
+Your profile reports 63 rows, 4 null cities, 3 null spends, 2 null order_dates and 3 duplicate rows. Two extreme outliers (99999.00 and 87500.00) are flagged at |z| > 3. The mean spend (~3348) is more than fifteen times the median (~219) — proof the outliers are distorting the mean.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - ModuleNotFoundError: pandas — Run pip3 install pandas. On Killercoda add --break-system-packages if pip refuses.
 - The heredoc pasted as one line — Paste the cat > ... <<'EOF' block line by line, or use nano sales_dirty.csv instead.
-- z-score flags nothing — With only 6 values the standard deviation is huge. That is why the lab uses a 1.5 threshold — explain this effect in your report.
+- z-score flags nothing — The spend column imported as text because of the blank cells. Wrap it in pd.to_numeric(..., errors='coerce') first, then recompute z.
 
 > **Note:** The same procedure, with the copy-paste commands, is in labs/lab-04/README.md in the course repository.
 
@@ -444,7 +408,12 @@ Three validated regex patterns (name, email, phone) and a cleaned CSV with the s
 
 **Step-by-step**
 
-1. Open RegexLab in your browser and clear the sample test string.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data/ — download them from GitHub or copy them from the folder you cloned.
+
+   ```bash
+   mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-05-build-parsing-patterns-in-regexlab-and-apply-them/data && for f in contacts.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+   ```
+
 2. Paste these three messy contact records into the Test String box:  Mei Tan <mei.tan@example.sg> +65 9123 4567
 3. Build the EMAIL pattern and watch the match count update live. Confirm it matches all three records.
 
@@ -465,30 +434,19 @@ Three validated regex patterns (name, email, phone) and a cleaned CSV with the s
    ```
 
 6. Use the Substitution panel to confirm your pattern replaces cleanly before you trust it in code.
-7. Switch to Killercoda and create the messy source file.
-
-   ```bash
-   mkdir -p ~/dataplus/lab5 && cd ~/dataplus/lab5 && cat > contacts.csv <<'EOF'
-id,contact
-1,Mei Tan <mei.tan@example.sg> +65 9123 4567
-2,Ravi Kumar <ravi.k@example.sg> 81234567
-3,Siti Nur <siti@example.sg> +65 6100 0613
-EOF
-   ```
-
-8. Apply the SAME patterns you validated in RegexLab, using pandas str.extract.
+7. Apply the SAME patterns you validated in RegexLab, using pandas str.extract.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('contacts.csv');d['name']=d.contact.str.extract(r'^([A-Za-z ]+?)\s*<');d['email']=d.contact.str.extract(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})');d['phone']=d.contact.str.extract(r'((?:\+65 ?)?[689][0-9]{3} ?[0-9]{4})');print(d[['id','name','email','phone']])"
    ```
 
-9. Normalise the phone format — strip +65 and spaces so every value has the same shape.
+8. Normalise the phone format — strip +65 and spaces so every value has the same shape.
 
    ```bash
    python3 -c "import pandas as pd,re;d=pd.read_csv('contacts.csv');d['phone']=d.contact.str.extract(r'((?:\+65 ?)?[689][0-9]{3} ?[0-9]{4})')[0].str.replace(r'[^0-9]','',regex=True).str[-8:];print(d[['id','phone']])"
    ```
 
-10. Save the cleaned, parsed output.
+9. Save the cleaned, parsed output.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('contacts.csv');d['name']=d.contact.str.extract(r'^([A-Za-z ]+?)\s*<');d['email']=d.contact.str.extract(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})');d['phone']=d.contact.str.extract(r'((?:\+65 ?)?[689][0-9]{3} ?[0-9]{4})')[0].str.replace(r'[^0-9]','',regex=True).str[-8:];d[['id','name','email','phone']].to_csv('contacts_clean.csv',index=False)" && cat contacts_clean.csv
@@ -497,10 +455,11 @@ EOF
 
 **Test it — the expected result**
 
-contacts_clean.csv holds three rows with name, email and an 8-digit phone each — 91234567, 81234567 and 61000613. No angle brackets, no +65 prefixes, no leftover spaces.
+contacts_clean.csv holds 30 rows, each with a name, an email and a normalised 8-digit phone. All 30 rows match all three patterns — no NaN in any column, no angle brackets, no +65 prefixes and no leftover spaces.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - RegexLab shows 0 matches — Check the flags — you usually want 'g' (global) so every record is matched, not just the first.
 - extract returns NaN — pandas needs a capturing group. Confirm your pattern has parentheses around the part you want.
 - The phone keeps its +65 — The .str.replace step is what strips it. Confirm regex=True is set, then take the last 8 characters.
@@ -524,24 +483,23 @@ A dataset enriched with four derived columns (network address, broadcast, usable
 
 **Step-by-step**
 
-1. Open the IP Calculator in your browser.
-2. Enter 192.168.10.0/24 and record the derived values: network, broadcast, usable host count and mask.
-3. Repeat for 10.0.5.0/22 and 172.16.8.0/29 — note how the usable-host count changes with the prefix.
-4. Switch to Killercoda and create the source dataset of raw CIDR strings.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && printf 'site,cidr\nHQ,192.168.10.0/24\nBranch,10.0.5.0/22\nDMZ,172.16.8.0/29\n' > sites.csv
+   mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data && for f in sites.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-5. Derive the same four fields in code — this is the DERIVED VARIABLE technique from the exam objectives.
+2. Enter 192.168.10.0/24 and record the derived values: network, broadcast, usable host count and mask.
+3. Repeat for 10.0.5.0/22 and 172.16.8.0/29 — note how the usable-host count changes with the prefix.
+4. Derive the same four fields in code — this is the DERIVED VARIABLE technique from the exam objectives.
 
    ```bash
    python3 -c "import pandas as pd,ipaddress as ip;d=pd.read_csv('sites.csv');n=d.cidr.map(ip.ip_network);d['network']=[str(x.network_address) for x in n];d['broadcast']=[str(x.broadcast_address) for x in n];d['usable_hosts']=[x.num_addresses-2 for x in n];d['mask']=[str(x.netmask) for x in n];print(d)"
    ```
 
-6. Compare every derived value against what the IP Calculator gave you — they must match exactly.
-7. Decide the storage trade-off the exam asks about: store the derived columns (fast reads, more space) or recompute on demand (less space, slower). Write your choice and the reason.
-8. Save the enriched dataset.
+5. Compare every derived value against what the IP Calculator gave you — they must match exactly.
+6. Decide the storage trade-off the exam asks about: store the derived columns (fast reads, more space) or recompute on demand (less space, slower). Write your choice and the reason.
+7. Save the enriched dataset.
 
    ```bash
    python3 -c "import pandas as pd,ipaddress as ip;d=pd.read_csv('sites.csv');n=d.cidr.map(ip.ip_network);d['network']=[str(x.network_address) for x in n];d['usable_hosts']=[x.num_addresses-2 for x in n];d.to_csv('sites_enriched.csv',index=False)" && cat sites_enriched.csv
@@ -554,6 +512,7 @@ The code and the IP Calculator agree: /24 gives 254 usable hosts, /22 gives 1022
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - ValueError: has host bits set — The address is not a valid network address for that prefix. Use ip_network(x, strict=False) or correct the CIDR.
 - usable_hosts is negative for /31 or /32 — Those prefixes have no usable host range by the -2 convention. Note this edge case in your report.
 - The numbers disagree with the calculator — Confirm you entered the same prefix length in both. A /22 is not a /24.
@@ -577,31 +536,13 @@ A single integrated, deduplicated analysis table built from three sources, with 
 
 **Step-by-step**
 
-1. Create the lab folder and the three source extracts.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7
+   mkdir -p ~/dataplus/lab7 && cd ~/dataplus/lab7 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-07-integrate-multiple-datasets-with-sql-joins-and-clean/data && for f in customers.csv orders.csv targets.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Source A — the customer master (note: customer 4 appears here only).
-
-   ```bash
-   printf 'customer_id,name,region\n1,Mei Tan,Central\n2,Ravi Kumar,West\n3,Siti Nur,North\n4,John Lee,East\n' > customers.csv
-   ```
-
-3. Source B — the order transactions (note: customer 4 has no orders; customer 5 has orders but no master record).
-
-   ```bash
-   printf 'order_id,customer_id,amount\n100,1,240.50\n101,2,89.00\n102,1,120.00\n103,3,310.00\n104,5,55.00\n' > orders.csv
-   ```
-
-4. Source C — the regional targets used to enrich the result.
-
-   ```bash
-   printf 'region,target\nCentral,500\nWest,300\nNorth,400\nEast,200\n' > targets.csv
-   ```
-
-5. Load all three into SQLite in one go.
+2. Load all three into SQLite in one go.
 
    ```bash
    sqlite3 integrate.db <<'EOF'
@@ -614,44 +555,45 @@ SELECT COUNT(*) AS customers FROM customers; SELECT COUNT(*) AS orders FROM orde
 EOF
    ```
 
-6. INNER JOIN — returns only matched rows. Count them and note what you silently lost.
+3. INNER JOIN — returns only matched rows. Count them and note what you silently lost.
 
    ```bash
    sqlite3 -header -column integrate.db "SELECT COUNT(*) AS inner_rows FROM orders o JOIN customers c ON c.customer_id=o.customer_id;"
    ```
 
-7. LEFT JOIN from orders — keeps order 104 whose customer is missing, showing NULL in the master fields.
+4. LEFT JOIN from orders — keeps order 104 whose customer is missing, showing NULL in the master fields.
 
    ```bash
    sqlite3 -header -column integrate.db "SELECT o.order_id, o.customer_id, c.name FROM orders o LEFT JOIN customers c ON c.customer_id=o.customer_id;"
    ```
 
-8. LEFT JOIN from customers — keeps John Lee, who has no orders at all.
+5. LEFT JOIN from customers — keeps John Lee, who has no orders at all.
 
    ```bash
    sqlite3 -header -column integrate.db "SELECT c.name, o.order_id FROM customers c LEFT JOIN orders o ON c.customer_id=o.customer_id;"
    ```
 
-9. Build the integrated analysis table joining all three sources and aggregating per region.
+6. Build the integrated analysis table joining all three sources and aggregating per region.
 
    ```bash
    sqlite3 -header -column integrate.db "SELECT c.region, COUNT(o.order_id) AS orders, ROUND(SUM(o.amount),2) AS revenue, t.target FROM customers c LEFT JOIN orders o ON c.customer_id=o.customer_id JOIN targets t ON t.region=c.region GROUP BY c.region, t.target;"
    ```
 
-10. Add the derived performance measure and persist the result.
+7. Add the derived performance measure and persist the result.
 
    ```bash
    sqlite3 -header -column integrate.db "CREATE TABLE regional AS SELECT c.region, COUNT(o.order_id) AS orders, COALESCE(SUM(o.amount),0) AS revenue, t.target, ROUND(COALESCE(SUM(o.amount),0)*100.0/t.target,1) AS pct_of_target FROM customers c LEFT JOIN orders o ON c.customer_id=o.customer_id JOIN targets t ON t.region=c.region GROUP BY c.region,t.target; SELECT * FROM regional;"
    ```
 
-11. Reconcile: explain in one line why the inner join returned 4 rows but there are 5 orders.
+8. Reconcile: explain in one line why the inner join returned 4 rows but there are 5 orders.
 
 **Test it — the expected result**
 
-The inner join returns 4 rows, not 5 — order 104 is dropped because customer 5 has no master record. The regional table shows East at 0% of target (John Lee ordered nothing) and Central above 70%.
+The sources hold 31 customers and 81 orders. The INNER JOIN returns only 80 rows — order 999 is dropped because customer 77 has no master record. Four customers have no orders at all and survive only via the LEFT JOIN. The regional table reports every region's revenue against its target.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - '.import' left the header as a data row — Older SQLite lacks --skip 1. Delete it after import: DELETE FROM customers WHERE customer_id='customer_id';
 - SUM returns NULL for East — That is correct SQL — no rows to sum. COALESCE(...,0) is what turns it into a reportable zero.
 - Amounts sort wrongly — CSV import types everything as TEXT. Use CAST(amount AS REAL) or create the table with explicit types first.
@@ -694,10 +636,10 @@ A descriptive-statistics report showing mean, median, mode, range, variance, SD 
 
 **Step-by-step**
 
-1. Create the lab folder and the salary dataset — one director salary is far above the rest.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && printf 'employee,dept,salary\nA,Ops,3800\nB,Ops,4200\nC,Ops,4000\nD,Sales,4500\nE,Sales,3900\nF,Sales,4200\nG,Tech,5200\nH,Tech,4800\nI,Tech,5000\nJ,Exec,26000\n' > salaries.csv
+   mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data && for f in salaries.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
 2. Compute CENTRAL TENDENCY — mean, median and mode together.
@@ -740,13 +682,14 @@ A descriptive-statistics report showing mean, median, mode, range, variance, SD 
 
 **Test it — the expected result**
 
-With the outlier the mean is ~6560 but the median is only 4350. Removing it drops the mean to ~4400 while the median barely moves (4350 → 4200). The Exec row is flagged at z ≈ 2.8. Your report recommends the MEDIAN.
+Across 61 employees the mean is ~4978 but the median is only 4550. Removing the single Executive salary drops the mean to ~4628 while the median barely moves (4550 → 4525). E999 is flagged at z ≈ 7.5, far beyond the |z| > 3 threshold. Your report recommends the MEDIAN as the typical salary.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - mode returns several values — A dataset with no repeated value returns every value. pandas .mode() correctly returns a list — report it as 'no single mode'.
 - Variance looks enormous — Variance is in squared units. Report the standard deviation (its square root) instead, which is in dollars.
-- No row is flagged at |z|>2 — With n=10 a single extreme point inflates the SD and hides itself. Try the median-absolute-deviation method and discuss the difference.
+- Only one row is flagged — That is correct — the dataset carries exactly one planted outlier (E999). Lower the threshold to |z| > 2 and note that nothing else appears, which is what a clean distribution looks like.
 
 > **Note:** The same procedure, with the copy-paste commands, is in labs/lab-08/README.md in the course repository.
 
@@ -771,52 +714,47 @@ A completed hypothesis test: stated H0/H1, computed t-statistic and p-value, an 
 
 **Step-by-step**
 
-1. Create the lab folder and install scipy.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && pip3 install scipy pandas --quiet
+   mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data && for f in abtest.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Create the A/B test dataset — group A is the old page, group B the new one.
-
-   ```bash
-   printf 'group,order_value\nA,42\nA,38\nA,45\nA,40\nA,37\nA,44\nA,41\nA,39\nB,48\nB,52\nB,47\nB,50\nB,53\nB,49\nB,51\nB,46\n' > abtest.csv
-   ```
-
-3. STATE THE HYPOTHESES before you look at any result — this is the discipline the exam tests.  H0: there is no difference in mean order value.  H1: the new page has a higher mean order value.
-4. Look at the group means first — a difference here is necessary but NOT sufficient.
+2. STATE THE HYPOTHESES before you look at any result — this is the discipline the exam tests.  H0: there is no difference in mean order value.  H1: the new page has a higher mean order value.
+3. Look at the group means first — a difference here is necessary but NOT sufficient.
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('abtest.csv');print(d.groupby('group').order_value.agg(['count','mean','std']).round(2))"
    ```
 
-5. Run the two-sample t-test and read the p-value.
+4. Run the two-sample t-test and read the p-value.
 
    ```bash
    python3 -c "import pandas as pd;from scipy import stats;d=pd.read_csv('abtest.csv');a=d[d.group=='A'].order_value;b=d[d.group=='B'].order_value;t,p=stats.ttest_ind(a,b);print('t =',round(t,4));print('p =',round(p,6))"
    ```
 
-6. Apply the 0.05 decision rule explicitly.
+5. Apply the 0.05 decision rule explicitly.
 
    ```bash
    python3 -c "import pandas as pd;from scipy import stats;d=pd.read_csv('abtest.csv');a=d[d.group=='A'].order_value;b=d[d.group=='B'].order_value;t,p=stats.ttest_ind(a,b);print('REJECT H0 - the difference is statistically significant' if p<0.05 else 'FAIL TO REJECT H0')"
    ```
 
-7. Compute the 95% confidence interval for the difference so you can report a range, not just a verdict.
+6. Compute the 95% confidence interval for the difference so you can report a range, not just a verdict.
 
    ```bash
    python3 -c "import pandas as pd,numpy as np;from scipy import stats;d=pd.read_csv('abtest.csv');a=d[d.group=='A'].order_value;b=d[d.group=='B'].order_value;diff=b.mean()-a.mean();se=np.sqrt(a.var()/len(a)+b.var()/len(b));print('diff',round(diff,2),'95% CI',(round(diff-1.96*se,2),round(diff+1.96*se,2)))"
    ```
 
-8. Now the error-type question. Write down: if you reject H0 and you are WRONG, which error is that (Type I) and what does it cost the business? If you fail to reject and you are wrong (Type II), what does that cost?
-9. Write the one-paragraph recommendation a manager could act on — no statistics jargon.
+7. Now the error-type question. Write down: if you reject H0 and you are WRONG, which error is that (Type I) and what does it cost the business? If you fail to reject and you are wrong (Type II), what does that cost?
+8. Write the one-paragraph recommendation a manager could act on — no statistics jargon.
 
 **Test it — the expected result**
 
-The t-test returns p well below 0.05 (approximately 0.000002), so you REJECT H0. Group B averages about 49.5 versus 40.75 for group A — a lift of roughly 8.75, with a confidence interval that excludes zero.
+With 60 observations per group the t-test returns t ≈ -11.3 and p ≈ 1.9e-20, far below 0.05, so you REJECT H0. Group B averages about 49.65 against 41.14 for group A — a lift of roughly 8.5, with a 95% confidence interval that excludes zero.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - ModuleNotFoundError: scipy — Run pip3 install scipy, adding --break-system-packages if Killercoda's pip refuses.
 - p-value is nan — One group has fewer than two values or zero variance. Check your CSV loaded all 16 rows with d.shape.
 - The result feels too clean — It is a teaching dataset with clean separation. Ask the trainer for the noisy variant to see a borderline p-value.
@@ -844,10 +782,10 @@ A correlation matrix, a fitted regression equation with R-squared, a prediction,
 
 **Step-by-step**
 
-1. Create the lab folder and the monthly marketing dataset.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-10-correlation-regression-and-the-causation-trap/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && printf 'month,spend,revenue,staff\n1,10,118,12\n2,12,131,12\n3,15,152,13\n4,18,171,14\n5,20,188,14\n6,22,197,15\n7,25,221,16\n8,28,238,16\n9,30,255,17\n10,33,271,18\n' > marketing.csv
+   mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-10-correlation-regression-and-the-causation-trap/data && for f in marketing.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
 2. Compute the full CORRELATION MATRIX — every pair at once.
@@ -885,10 +823,11 @@ A correlation matrix, a fitted regression equation with R-squared, a prediction,
 
 **Test it — the expected result**
 
-Spend and revenue correlate at r ≈ 0.999 with R-squared ≈ 0.998, giving revenue ≈ 6.6 × spend + 52. Staff also correlates ≈ 0.99 with revenue — but growth over time drives both, so the link is not causal.
+Across 36 months spend and revenue correlate at r ≈ 0.991 with R-squared ≈ 0.982, giving revenue ≈ 6.55 × spend + 54.1. Staff headcount ALSO correlates with revenue at r ≈ 0.970 — but growth over time drives both, so that second relationship is not causal.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - r is exactly 1.0 — Perfect correlation means the data is synthetic and noise-free. Note that real business data never looks like this.
 - linregress has no attribute rvalue — You are on a very old scipy. Use r,p = stats.pearsonr(...) and square r yourself.
 - The prediction looks unreasonable — That is the extrapolation lesson — a linear model fitted on 10–33 has no evidence about 40. Say so in the report.
@@ -931,68 +870,63 @@ Five correctly chosen charts (line, bar, pie, histogram, scatter) as PNG files, 
 
 **Step-by-step**
 
-1. Create the lab folder and install matplotlib.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && pip3 install matplotlib pandas --quiet
+   mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data && for f in sales.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Create the quarterly sales dataset used for every chart in this lab.
-
-   ```bash
-   printf 'month,region,revenue,orders,unit_price\nJan,Central,118,42,12.4\nFeb,Central,131,47,12.8\nMar,Central,152,55,13.1\nJan,West,88,31,11.9\nFeb,West,95,34,12.2\nMar,West,104,38,12.0\nJan,North,142,50,13.5\nFeb,North,138,49,13.3\nMar,North,161,58,13.9\n' > sales.csv
-   ```
-
-3. Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.
+2. Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.
 
    ```bash
    python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');p=d.pivot_table(index='month',columns='region',values='revenue').reindex(['Jan','Feb','Mar']);p.plot(marker='o');plt.title('Revenue Trend by Region');plt.ylabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('01_line.png',dpi=120)"
    ```
 
-4. Q2 'Which region sells most?' → BAR CHART, because you are comparing categories.
+3. Q2 'Which region sells most?' → BAR CHART, because you are comparing categories.
 
    ```bash
    python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('region').revenue.sum().sort_values().plot(kind='barh',color='#1F6FEB');plt.title('Total Revenue by Region');plt.xlabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('02_bar.png',dpi=120)"
    ```
 
-5. Q3 'What share does each region hold?' → PIE CHART, because it is parts of one whole (and only 3 slices).
+4. Q3 'What share does each region hold?' → PIE CHART, because it is parts of one whole (and only 3 slices).
 
    ```bash
    python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('region').revenue.sum().plot(kind='pie',autopct='%1.1f%%',colors=['#1F6FEB','#10B981','#7C3AED']);plt.title('Revenue Share by Region');plt.ylabel('');plt.tight_layout();plt.savefig('03_pie.png',dpi=120)"
    ```
 
-6. Q4 'How are order sizes distributed?' → HISTOGRAM, because you want the shape of one variable.
+5. Q4 'How are order sizes distributed?' → HISTOGRAM, because you want the shape of one variable.
 
    ```bash
    python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.orders.plot(kind='hist',bins=5,color='#F59E0B',edgecolor='white');plt.title('Distribution of Order Counts');plt.xlabel('Orders per region-month');plt.tight_layout();plt.savefig('04_hist.png',dpi=120)"
    ```
 
-7. Q5 'Do more orders mean higher revenue?' → SCATTER PLOT, because you are testing a relationship.
+6. Q5 'Do more orders mean higher revenue?' → SCATTER PLOT, because you are testing a relationship.
 
    ```bash
    python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');plt.scatter(d.orders,d.revenue,c='#7C3AED',s=80);plt.title('Orders vs Revenue');plt.xlabel('Orders');plt.ylabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('05_scatter.png',dpi=120)"
    ```
 
-8. Now build the WRONG chart on purpose — a pie chart of a time series, which destroys the time ordering.
+7. Now build the WRONG chart on purpose — a pie chart of a time series, which destroys the time ordering.
 
    ```bash
    python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('month').revenue.sum().plot(kind='pie',autopct='%1.1f%%');plt.title('WRONG: revenue by month as a pie');plt.ylabel('');plt.tight_layout();plt.savefig('06_wrong.png',dpi=120)"
    ```
 
-9. List the generated files and write one line per chart stating the question it answers.
+8. List the generated files and write one line per chart stating the question it answers.
 
    ```bash
    ls -1 *.png
    ```
 
-10. Write the critique of 06_wrong.png: what does a pie chart hide that a line chart shows?
+9. Write the critique of 06_wrong.png: what does a pie chart hide that a line chart shows?
 
 **Test it — the expected result**
 
-Six PNG files exist. Each of the five correct charts answers its stated question, and your critique of the wrong chart explains that a pie destroys the sequence and makes a trend impossible to read.
+Six PNG files exist, built from 24 rows covering 6 months × 4 regions. Each of the five correct charts answers its stated question, and your critique of the wrong chart explains that a pie destroys the sequence and makes a trend impossible to read.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - No display / tkinter error — You must set matplotlib.use('Agg') BEFORE importing pyplot — headless terminals have no display.
 - The PNG is blank — You saved after calling plt.show() or a new figure. Call plt.savefig() before any clf/show, and use plt.close() between charts.
 - Months are out of order — Alphabetical sorting puts Feb first. The .reindex(['Jan','Feb','Mar']) call is what fixes it.
@@ -1020,10 +954,10 @@ A four-panel KPI dashboard PNG plus a signed validation checklist that catches a
 
 **Step-by-step**
 
-1. Create the lab folder and the source data for the dashboard.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && printf 'month,region,revenue,orders,target\nJan,Central,118,42,120\nFeb,Central,131,47,120\nMar,Central,152,55,120\nJan,West,88,31,100\nFeb,West,95,34,100\nMar,West,104,38,100\nJan,North,142,50,130\nFeb,North,138,49,130\nMar,North,161,58,130\n' > kpi.csv
+   mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data && for f in kpi.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
 2. Compute the headline KPIs first — you must know the true numbers BEFORE you draw anything.
@@ -1098,10 +1032,11 @@ python3 dashboard.py
 
 **Test it — the expected result**
 
-dashboard.png shows four panels. Total revenue validates at 1129 by two independent methods. After the planted error the total jumps to 2578 and North shows 483% of target — an impossible figure your validation flags immediately.
+dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent methods, and North reports 111.9% of target. After the planted error the total jumps by roughly 1450 and North exceeds 250% of target — an impossible figure your validation flags immediately.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - Panels overlap or the title is cut — Use plt.tight_layout(rect=[0,0,1,0.95]) so the suptitle gets its own space.
 - sed did not change anything — Check the exact text with grep 'Mar,North' kpi.csv — sed needs a byte-exact match.
 - The % of target axis looks wrong — Confirm you summed target per region (3 months × the monthly target), not just one month's value.
@@ -1140,10 +1075,10 @@ A classification matrix for every column plus three protected versions of the da
 
 **Step-by-step**
 
-1. Create the lab folder and the sensitive source extract.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13 && printf 'cust_id,name,nric,email,postal,dept,salary\n1,Mei Tan,S1234567A,mei.tan@example.sg,738099,Ops,4200\n2,Ravi Kumar,S2345678B,ravi.k@example.sg,600123,Sales,4500\n3,Siti Nur,S3456789C,siti@example.sg,310045,Tech,5200\n4,John Lee,S4567890D,john.lee@example.sg,529536,Ops,3900\n' > customers.csv
+   mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data && for f in customers.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
 2. CLASSIFY first. For each column write down its classification (public / internal / sensitive / confidential) and its data type tag (PII, PIFI, none). NRIC is confidential PII; salary is sensitive PIFI; dept is internal.
@@ -1171,7 +1106,7 @@ A classification matrix for every column plus three protected versions of the da
    python3 -c "import pandas as pd,hashlib;d=pd.read_csv('customers.csv');d['subject_key']=d.nric.map(lambda v: hashlib.sha256(v.encode()).hexdigest()[:12]);print(d.groupby('dept').salary.mean().round(2))"
    ```
 
-7. Test the re-identification risk. With only 4 rows, does the postal code alone identify someone? Discuss why small groups defeat de-identification (the k-anonymity problem).
+7. Test the re-identification risk: group by postal code and find the SMALLEST group. Any group of 1 is uniquely identifying. Discuss why small groups defeat de-identification (the k-anonymity problem).
 
    ```bash
    python3 -c "import pandas as pd;d=pd.read_csv('customers.csv');print(d.groupby('postal').size())"
@@ -1186,13 +1121,14 @@ A classification matrix for every column plus three protected versions of the da
 
 **Test it — the expected result**
 
-Masking shows S****A. De-identification drops three columns. Pseudonymisation gives a stable 12-character key, and the departmental salary averages (Ops 4050, Sales 4500, Tech 5200) are identical to the originals.
+Across 40 records masking shows the NRIC as S****G form. De-identification drops name, nric and email. Pseudonymisation gives a stable 12-character key, and the departmental salary averages (Operations 4006.25, Sales 4518.75, Technology 5431.25, Finance 4612.50, Marketing 4268.75) are identical to those computed on the raw data.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - The email regex did not mask — Confirm regex=True is passed to str.replace and the backreferences use \1 and \2.
 - The hash changes between runs — SHA-256 is deterministic — if it changes, your input has stray whitespace. Strip it first.
-- Every postal group has size 1 — Exactly the point — with n=4 every quasi-identifier is unique, so de-identification alone is not enough. Record that finding.
+- Some postal groups are small — That is the k-anonymity problem: a group of 1 identifies a person even with the name removed. Note which postal codes fail a k=5 threshold.
 
 > **Note:** The same procedure, with the copy-paste commands, is in labs/lab-13/README.md in the course repository.
 
@@ -1251,19 +1187,13 @@ A reusable dq_check.py suite that scores five quality dimensions, exits non-zero
 
 **Step-by-step**
 
-1. Create the lab folder and today's clean feed.
+1. Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-15-automated-quality-assurance-profile-rule-monitor/data/ — download them from GitHub or copy them from the folder you cloned.
 
    ```bash
-   mkdir -p ~/dataplus/lab15 && cd ~/dataplus/lab15 && printf 'order_id,customer_id,order_date,amount,status\n1,101,2025-03-01,240.50,SHIPPED\n2,102,2025-03-01,89.00,SHIPPED\n3,103,2025-03-02,145.25,PENDING\n4,104,2025-03-02,310.00,SHIPPED\n' > feed_good.csv
+   mkdir -p ~/dataplus/lab15 && cd ~/dataplus/lab15 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-15-automated-quality-assurance-profile-rule-monitor/data && for f in feed_good.csv feed_bad.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
    ```
 
-2. Create tomorrow's BROKEN feed — a null, a duplicate id, a negative amount and an invalid status.
-
-   ```bash
-   printf 'order_id,customer_id,order_date,amount,status\n5,105,2025-03-03,120.00,SHIPPED\n6,,2025-03-03,75.00,SHIPPED\n6,107,2025-03-03,-45.00,SHIPPED\n8,108,2025-03-03,99.00,TELEPORTED\n' > feed_bad.csv
-   ```
-
-3. Write the quality suite — one function per quality dimension.
+2. Write the quality suite — one function per quality dimension.
 
    ```bash
    cat > dq_check.py <<'EOF'
@@ -1304,31 +1234,31 @@ EOF
 echo written
    ```
 
-4. Run the suite against the GOOD feed — it must pass all five and exit 0.
+3. Run the suite against the GOOD feed — it must pass all five and exit 0.
 
    ```bash
    python3 dq_check.py feed_good.csv; echo "exit code: $?"
    ```
 
-5. Run it against the BROKEN feed — it must fail four dimensions and exit 1.
+4. Run it against the BROKEN feed — it must fail four dimensions and exit 1.
 
    ```bash
    python3 dq_check.py feed_bad.csv; echo "exit code: $?"
    ```
 
-6. This exit code is what makes it MONITORING rather than a report — a scheduler can now block a bad load.
+5. This exit code is what makes it MONITORING rather than a report — a scheduler can now block a bad load.
 
    ```bash
    python3 dq_check.py feed_bad.csv > /dev/null 2>&1 && echo 'LOAD APPROVED' || echo 'LOAD BLOCKED - do not ingest'
    ```
 
-7. Save a dated quality report so you build a quality history, not just a snapshot.
+6. Save a dated quality report so you build a quality history, not just a snapshot.
 
    ```bash
    python3 dq_check.py feed_good.csv > dq_report_$(date +%Y%m%d).txt; ls -1 dq_report_*.txt
    ```
 
-8. Add the lineage note: record the source, the owner, the rule version and the run date. This is the documentation half of the exam's data-management objective.
+7. Add the lineage note: record the source, the owner, the rule version and the run date. This is the documentation half of the exam's data-management objective.
 
    ```bash
    printf 'source: orders feed (daily)\nowner: Sales Ops\nsteward: Data Quality team\nrules version: 1.0\nrun: %s\n' "$(date +%F)" > lineage.txt && cat lineage.txt
@@ -1337,10 +1267,11 @@ echo written
 
 **Test it — the expected result**
 
-feed_good.csv scores 5/5 and exits 0. feed_bad.csv fails completeness, uniqueness, validity and consistency — 1/5 — and exits 1, so the 'LOAD BLOCKED' branch fires.
+feed_good.csv (40 rows) scores 5/5 and exits 0. feed_bad.csv (40 rows) fails ALL FIVE dimensions — 2 nulls, 2 duplicate order_ids, 2 negative amounts, 2 invalid status values and 1 unparseable date — so it scores 0/5, exits 1, and the 'LOAD BLOCKED' branch fires.
 
 **If it doesn't work**
 
+- The CSV contains '404: Not Found' — curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned.
 - The heredoc breaks on the f-strings — Ensure you used <<'EOF' with the quotes — that stops the shell expanding anything inside.
 - Exit code is always 0 — You ran it inside another command. Test with python3 dq_check.py feed_bad.csv; echo $? on its own line.
 - accuracy fails on the good feed — Your dates are not ISO format. pandas parses YYYY-MM-DD reliably — normalise the feed first.

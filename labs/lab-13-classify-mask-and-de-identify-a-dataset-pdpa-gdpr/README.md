@@ -29,10 +29,10 @@ A classification matrix for every column plus three protected versions of the da
 
 ### Step 1
 
-Create the lab folder and the sensitive source extract.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13 && printf 'cust_id,name,nric,email,postal,dept,salary\n1,Mei Tan,S1234567A,mei.tan@example.sg,738099,Ops,4200\n2,Ravi Kumar,S2345678B,ravi.k@example.sg,600123,Sales,4500\n3,Siti Nur,S3456789C,siti@example.sg,310045,Tech,5200\n4,John Lee,S4567890D,john.lee@example.sg,529536,Ops,3900\n' > customers.csv
+mkdir -p ~/dataplus/lab13 && cd ~/dataplus/lab13 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-13-classify-mask-and-de-identify-a-dataset-pdpa-gdpr/data && for f in customers.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
@@ -73,7 +73,7 @@ python3 -c "import pandas as pd,hashlib;d=pd.read_csv('customers.csv');d['subjec
 
 ### Step 7
 
-Test the re-identification risk. With only 4 rows, does the postal code alone identify someone? Discuss why small groups defeat de-identification (the k-anonymity problem).
+Test the re-identification risk: group by postal code and find the SMALLEST group. Any group of 1 is uniquely identifying. Discuss why small groups defeat de-identification (the k-anonymity problem).
 
 ```bash
 python3 -c "import pandas as pd;d=pd.read_csv('customers.csv');print(d.groupby('postal').size())"
@@ -89,17 +89,27 @@ python3 -c "import pandas as pd,hashlib;d=pd.read_csv('customers.csv');d['subjec
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/customers.csv`](data/customers.csv) — 2,776 bytes
+- [`data/customers.xlsx`](data/customers.xlsx) — 7,130 bytes
+
+---
+
 ## Test it — expected result
 
-Masking shows S****A. De-identification drops three columns. Pseudonymisation gives a stable 12-character key, and the departmental salary averages (Ops 4050, Sales 4500, Tech 5200) are identical to the originals.
+Across 40 records masking shows the NRIC as S****G form. De-identification drops name, nric and email. Pseudonymisation gives a stable 12-character key, and the departmental salary averages (Operations 4006.25, Sales 4518.75, Technology 5431.25, Finance 4612.50, Marketing 4268.75) are identical to those computed on the raw data.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | The email regex did not mask | Confirm regex=True is passed to str.replace and the backreferences use \1 and \2. |
 | The hash changes between runs | SHA-256 is deterministic — if it changes, your input has stray whitespace. Strip it first. |
-| Every postal group has size 1 | Exactly the point — with n=4 every quasi-identifier is unique, so de-identification alone is not enough. Record that finding. |
+| Some postal groups are small | That is the k-anonymity problem: a group of 1 identifies a person even with the name removed. Note which postal codes fail a k=5 threshold. |
 
 ---
 

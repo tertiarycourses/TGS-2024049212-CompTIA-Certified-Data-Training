@@ -1,0 +1,64 @@
+order_id,customer,city,spend,order_date
+1,Priya Menon,Tampines,291.12,2025-03-02
+2,Marcus Tay,Woodlands,352.30,2025-03-03
+3,Lakshmi Lee,Jurong,190.10,2025-03-04
+4,Zhi Wei Ee,Singapore,142.38,2025-03-05
+5,Hakim Osman,Tampines,118.38,2025-03-06
+6,Mei Ong,Woodlands,236.84,2025-03-07
+7,Priya Teo,Jurong,398.64,2025-03-08
+8,Marcus Sim,,332.19,2025-03-09
+9,Lakshmi Ismail,Tampines,43.86,2025-03-10
+10,Zhi Wei Chua,Woodlands,99999.00,2025-03-11
+11,Hakim Kumar,Jurong,226.20,2025-03-12
+12,Mei Goh,Singapore,186.22,2025-03-13
+13,Priya Raj,Tampines,,2025-03-14
+14,Marcus Lim,Woodlands,279.45,2025-03-15
+15,Lakshmi Pillai,Jurong,417.64,2025-03-16
+16,Zhi Wei Yeo,  Jurong  ,333.19,2025-03-17
+17,Hakim Binte Rahman,Tampines,231.47,2025-03-18
+18,Mei Singh,Woodlands,252.03,2025-03-19
+19,Priya Hassan,Jurong,471.95,
+20,Marcus Chan,Singapore,272.43,2025-03-21
+21,Lakshmi Reyes,Tampines,61.65,2025-03-22
+22,Zhi Wei Nur,Woodlands,168.28,2025-03-23
+23,Hakim Abdullah,,208.26,2025-03-24
+24,Mei Foo,Singapore,79.87,2025-03-25
+25,Priya Sharma,Tampines,116.87,2025-03-26
+26,Marcus Ng,Woodlands,138.28,2025-03-27
+27,Lakshmi Nair,Jurong,352.30,2025-03-28
+28,Zhi Wei Wong,Singapore,259.70,2025-03-29
+29,Hakim Koh,Tampines,298.72,2025-03-30
+30,Mei Tan,Woodlands,,2025-03-01
+31,Priya Menon,Jurong,111.45,2025-03-02
+32,Marcus Tay,singapore,124.52,2025-03-03
+33,Lakshmi Lee,Tampines,106.50,2025-03-04
+34,Zhi Wei Ee,Woodlands,427.66,2025-03-05
+35,Hakim Osman,Jurong,173.17,2025-03-06
+36,Mei Ong,Singapore,429.22,
+37,Priya Teo,Tampines,396.10,2025-03-08
+38,Marcus Sim,Woodlands,66.07,2025-03-09
+39,Lakshmi Ismail,Jurong,87500.00,2025-03-10
+40,Zhi Wei Chua,Singapore,216.09,2025-03-11
+41,Hakim Kumar,Tampines,290.57,2025-03-12
+42,Mei Goh,,338.37,2025-03-13
+43,Priya Raj,Jurong,140.47,2025-03-14
+44,Marcus Lim,Singapore,91.61,2025-03-15
+45,Lakshmi Pillai,Tampines,167.64,2025-03-16
+46,Zhi Wei Yeo,Woodlands,196.80,2025-03-17
+47,Hakim Binte Rahman,Jurong,222.38,2025-03-18
+48,Mei Singh,Singapore,,2025-03-19
+49,Priya Hassan,Tampines,324.06,2025-03-20
+50,Marcus Chan,Woodlands,443.82,2025-03-21
+51,Lakshmi Reyes,Jurong,109.47,2025-03-22
+52,Zhi Wei Nur,Singapore,74.63,2025-03-23
+53,Hakim Abdullah,Tampines,143.84,2025-03-24
+54,Mei Foo,,390.59,2025-03-25
+55,Priya Sharma,Jurong,113.26,2025-03-26
+56,Marcus Ng,Singapore,361.80,2025-03-27
+57,Lakshmi Nair,Tampines,120.92,2025-03-28
+58,Zhi Wei Wong,Woodlands,160.49,2025-03-29
+59,Hakim Koh,Jurong,297.86,2025-03-30
+60,Mei Tan,Singapore,203.07,2025-03-01
+4,Zhi Wei Ee,Singapore,142.38,2025-03-05
+27,Lakshmi Nair,Jurong,352.30,2025-03-28
+45,Lakshmi Pillai,Tampines,167.64,2025-03-16

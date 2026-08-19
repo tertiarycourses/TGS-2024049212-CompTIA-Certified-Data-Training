@@ -21,9 +21,9 @@ DOMAIN1 = [
         services="Killercoda Ubuntu, SQLite 3, SQL DDL/DML",
         env=KILLERCODA,
         steps=[
-            ("Open the Killercoda Ubuntu playground in your browser and confirm SQLite is available.", "sqlite3 --version"),
-            ("Create the lab folder and open a new database file.", "mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1 && sqlite3 sales.db"),
-            ("Turn foreign-key enforcement ON — SQLite leaves it off by default, which is the single most common cause of orphaned rows.",
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab1 && cd ~/dataplus/lab1 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-01-build-a-relational-schema-and-prove-referential-inte/data && for f in customers.csv products.csv orders.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+                        ("Turn foreign-key enforcement ON — SQLite leaves it off by default, which is the single most common cause of orphaned rows.",
              "PRAGMA foreign_keys = ON;"),
             ("Create the customers table with a primary key and typed columns (INTEGER, TEXT, DATE).",
              "CREATE TABLE customers (customer_id INTEGER PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT UNIQUE, joined DATE);"),
@@ -31,8 +31,8 @@ DOMAIN1 = [
              "CREATE TABLE products (product_id INTEGER PRIMARY KEY, name TEXT NOT NULL, unit_price REAL CHECK (unit_price >= 0));"),
             ("Create the orders fact table carrying TWO foreign keys with ON DELETE CASCADE.",
              "CREATE TABLE orders (order_id INTEGER PRIMARY KEY, customer_id INTEGER REFERENCES customers(customer_id) ON DELETE CASCADE, product_id INTEGER REFERENCES products(product_id), qty INTEGER NOT NULL, order_date DATE);"),
-            ("Insert reference data into the two dimension tables.",
-             "INSERT INTO customers VALUES (1,'Mei','Tan','mei.tan@example.sg','2025-01-14'),(2,'Ravi','Kumar','ravi.k@example.sg','2025-02-03');"),
+            ("Import the three CSV extracts into the tables you just created.",
+             "sqlite3 sales.db \".mode csv\" \".import --skip 1 customers.csv customers\" \".import --skip 1 products.csv products\" \".import --skip 1 orders.csv orders\" \"SELECT COUNT(*) FROM customers; SELECT COUNT(*) FROM products; SELECT COUNT(*) FROM orders;\""),
             ("Insert the product rows.",
              "INSERT INTO products VALUES (10,'Wireless Mouse',24.90),(11,'USB-C Hub',59.00);"),
             ("Insert valid orders that respect both foreign keys.",
@@ -44,9 +44,11 @@ DOMAIN1 = [
             ("Run a join across all three tables to confirm the schema answers a real business question.",
              "SELECT c.first_name, p.name, o.qty, o.qty*p.unit_price AS line_total FROM orders o JOIN customers c ON c.customer_id=o.customer_id JOIN products p ON p.product_id=o.product_id;"),
         ],
-        test=("Attack 1 fails with 'FOREIGN KEY constraint failed' and attack 2 removes order 100 automatically. "
-              "The final join returns one row (Ravi · USB-C Hub · 1 · 59.0)."),
+        test=("The three tables import 40 customers, 10 products and 120 orders. Attack 1 fails with "
+              "'FOREIGN KEY constraint failed'. Attack 2 deletes customer 1 AND cascades to their 2 orders, "
+              "so the order count drops from 120 to 118. The final join returns 118 priced order lines."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("The orphan insert SUCCEEDED", "You forgot PRAGMA foreign_keys = ON. It resets on every new connection — re-run it after reopening sqlite3."),
             ("'no such table' error", "You are in a different database file. Run .databases inside sqlite3 to confirm you opened sales.db."),
             ("The cascade did not fire", "ON DELETE CASCADE only works with foreign keys enforced. Re-check the PRAGMA, then re-create the orders table."),
@@ -64,14 +66,9 @@ DOMAIN1 = [
         services="Killercoda Ubuntu, Python 3, csv and json modules",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder.", "mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2"),
-            ("Write the STRUCTURED version — a delimited CSV with a fixed header and one record per line.",
-             "printf 'customer_id,name,city,spend\\n1,Mei Tan,Singapore,240.50\\n2,Ravi Kumar,Jurong,89.00\\n' > customers.csv"),
-            ("Write the SEMI-STRUCTURED version — JSON, which is self-describing and allows nested and ragged fields.",
-             "printf '[{\"customer_id\":1,\"name\":\"Mei Tan\",\"city\":\"Singapore\",\"spend\":240.50,\"tags\":[\"vip\",\"repeat\"]},{\"customer_id\":2,\"name\":\"Ravi Kumar\",\"city\":\"Jurong\",\"spend\":89.00}]' > customers.json"),
-            ("Write the UNSTRUCTURED version — the same facts buried in prose, with no schema at all.",
-             "printf 'Mei Tan from Singapore spent about $240.50 with us this quarter. Ravi Kumar (Jurong) spent 89 dollars.\\n' > notes.txt"),
-            ("Query the CSV — three lines of code, because the structure is guaranteed.",
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-02-compare-structured-semi-structured-and-unstructured/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab2 && cd ~/dataplus/lab2 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-02-compare-structured-semi-structured-and-unstructured/data && for f in customers.csv customers.json notes.txt; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+                                                ("Query the CSV — three lines of code, because the structure is guaranteed.",
              "python3 -c \"import csv;print(sum(float(r['spend']) for r in csv.DictReader(open('customers.csv'))))\""),
             ("Query the JSON — still easy, and it carries the extra 'tags' field the CSV could not hold.",
              "python3 -c \"import json;d=json.load(open('customers.json'));print(sum(r['spend'] for r in d));print(d[0].get('tags'))\""),
@@ -80,9 +77,11 @@ DOMAIN1 = [
             ("Compare the file sizes and record what each format cost you in query effort.",
              "ls -l customers.csv customers.json notes.txt"),
         ],
-        test=("The CSV and JSON both total 329.5. The JSON also returns ['vip','repeat'] — a field the CSV cannot "
-              "represent. The regex over notes.txt returns extra noise, proving unstructured data needs parsing before analysis."),
+        test=("The CSV and the JSON both total 2293.17 across 12 customers. The JSON also returns ['vip','repeat'] "
+              "for the first record — a field the flat CSV cannot represent at all. The regex over notes.txt returns "
+              "extra noise, proving unstructured text needs parsing before it can be analysed."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("JSONDecodeError", "The shell ate a quote. Re-run the printf line exactly, or use nano customers.json and paste the JSON in."),
             ("The regex returns '240.50' and '89' plus junk", "That is the expected lesson — unstructured text has no guarantees. Tighten the pattern in RegexLab."),
             ("KeyError: 'spend'", "Your CSV header row is missing or misspelled. Run head -1 customers.csv to check it."),

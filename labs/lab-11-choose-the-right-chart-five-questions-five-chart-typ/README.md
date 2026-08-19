@@ -29,21 +29,13 @@ Five correctly chosen charts (line, bar, pie, histogram, scatter) as PNG files, 
 
 ### Step 1
 
-Create the lab folder and install matplotlib.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && pip3 install matplotlib pandas --quiet
+mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data && for f in sales.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
-
-Create the quarterly sales dataset used for every chart in this lab.
-
-```bash
-printf 'month,region,revenue,orders,unit_price\nJan,Central,118,42,12.4\nFeb,Central,131,47,12.8\nMar,Central,152,55,13.1\nJan,West,88,31,11.9\nFeb,West,95,34,12.2\nMar,West,104,38,12.0\nJan,North,142,50,13.5\nFeb,North,138,49,13.3\nMar,North,161,58,13.9\n' > sales.csv
-```
-
-### Step 3
 
 Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.
 
@@ -51,7 +43,7 @@ Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.
 python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');p=d.pivot_table(index='month',columns='region',values='revenue').reindex(['Jan','Feb','Mar']);p.plot(marker='o');plt.title('Revenue Trend by Region');plt.ylabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('01_line.png',dpi=120)"
 ```
 
-### Step 4
+### Step 3
 
 Q2 'Which region sells most?' → BAR CHART, because you are comparing categories.
 
@@ -59,7 +51,7 @@ Q2 'Which region sells most?' → BAR CHART, because you are comparing categorie
 python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('region').revenue.sum().sort_values().plot(kind='barh',color='#1F6FEB');plt.title('Total Revenue by Region');plt.xlabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('02_bar.png',dpi=120)"
 ```
 
-### Step 5
+### Step 4
 
 Q3 'What share does each region hold?' → PIE CHART, because it is parts of one whole (and only 3 slices).
 
@@ -67,7 +59,7 @@ Q3 'What share does each region hold?' → PIE CHART, because it is parts of one
 python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('region').revenue.sum().plot(kind='pie',autopct='%1.1f%%',colors=['#1F6FEB','#10B981','#7C3AED']);plt.title('Revenue Share by Region');plt.ylabel('');plt.tight_layout();plt.savefig('03_pie.png',dpi=120)"
 ```
 
-### Step 6
+### Step 5
 
 Q4 'How are order sizes distributed?' → HISTOGRAM, because you want the shape of one variable.
 
@@ -75,7 +67,7 @@ Q4 'How are order sizes distributed?' → HISTOGRAM, because you want the shape 
 python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.orders.plot(kind='hist',bins=5,color='#F59E0B',edgecolor='white');plt.title('Distribution of Order Counts');plt.xlabel('Orders per region-month');plt.tight_layout();plt.savefig('04_hist.png',dpi=120)"
 ```
 
-### Step 7
+### Step 6
 
 Q5 'Do more orders mean higher revenue?' → SCATTER PLOT, because you are testing a relationship.
 
@@ -83,7 +75,7 @@ Q5 'Do more orders mean higher revenue?' → SCATTER PLOT, because you are testi
 python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');plt.scatter(d.orders,d.revenue,c='#7C3AED',s=80);plt.title('Orders vs Revenue');plt.xlabel('Orders');plt.ylabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('05_scatter.png',dpi=120)"
 ```
 
-### Step 8
+### Step 7
 
 Now build the WRONG chart on purpose — a pie chart of a time series, which destroys the time ordering.
 
@@ -91,7 +83,7 @@ Now build the WRONG chart on purpose — a pie chart of a time series, which des
 python3 -c "import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('month').revenue.sum().plot(kind='pie',autopct='%1.1f%%');plt.title('WRONG: revenue by month as a pie');plt.ylabel('');plt.tight_layout();plt.savefig('06_wrong.png',dpi=120)"
 ```
 
-### Step 9
+### Step 8
 
 List the generated files and write one line per chart stating the question it answers.
 
@@ -99,20 +91,30 @@ List the generated files and write one line per chart stating the question it an
 ls -1 *.png
 ```
 
-### Step 10
+### Step 9
 
 Write the critique of 06_wrong.png: what does a pie chart hide that a line chart shows?
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/sales.csv`](data/sales.csv) — 632 bytes
+- [`data/sales.xlsx`](data/sales.xlsx) — 5,837 bytes
+
+---
+
 ## Test it — expected result
 
-Six PNG files exist. Each of the five correct charts answers its stated question, and your critique of the wrong chart explains that a pie destroys the sequence and makes a trend impossible to read.
+Six PNG files exist, built from 24 rows covering 6 months × 4 regions. Each of the five correct charts answers its stated question, and your critique of the wrong chart explains that a pie destroys the sequence and makes a trend impossible to read.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | No display / tkinter error | You must set matplotlib.use('Agg') BEFORE importing pyplot — headless terminals have no display. |
 | The PNG is blank | You saved after calling plt.show() or a new figure. Call plt.savefig() before any clf/show, and use plt.close() between charts. |
 | Months are out of order | Alphabetical sorting puts Feb first. The .reindex(['Jan','Feb','Mar']) call is what fixes it. |

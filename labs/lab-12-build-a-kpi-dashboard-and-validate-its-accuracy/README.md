@@ -29,10 +29,10 @@ A four-panel KPI dashboard PNG plus a signed validation checklist that catches a
 
 ### Step 1
 
-Create the lab folder and the source data for the dashboard.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && printf 'month,region,revenue,orders,target\nJan,Central,118,42,120\nFeb,Central,131,47,120\nMar,Central,152,55,120\nJan,West,88,31,100\nFeb,West,95,34,100\nMar,West,104,38,100\nJan,North,142,50,130\nFeb,North,138,49,130\nMar,North,161,58,130\n' > kpi.csv
+mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data && for f in kpi.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
@@ -125,14 +125,24 @@ Sign off the validation checklist: record count, recalculation, cross-validation
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/kpi.csv`](data/kpi.csv) — 607 bytes
+- [`data/kpi.xlsx`](data/kpi.xlsx) — 5,781 bytes
+
+---
+
 ## Test it — expected result
 
-dashboard.png shows four panels. Total revenue validates at 1129 by two independent methods. After the planted error the total jumps to 2578 and North shows 483% of target — an impossible figure your validation flags immediately.
+dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent methods, and North reports 111.9% of target. After the planted error the total jumps by roughly 1450 and North exceeds 250% of target — an impossible figure your validation flags immediately.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | Panels overlap or the title is cut | Use plt.tight_layout(rect=[0,0,1,0.95]) so the suptitle gets its own space. |
 | sed did not change anything | Check the exact text with grep 'Mar,North' kpi.csv — sed needs a byte-exact match. |
 | The % of target axis looks wrong | Confirm you summed target per region (3 months × the monthly target), not just one month's value. |

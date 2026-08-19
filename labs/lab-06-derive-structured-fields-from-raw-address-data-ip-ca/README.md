@@ -29,7 +29,11 @@ A dataset enriched with four derived columns (network address, broadcast, usable
 
 ### Step 1
 
-Open the IP Calculator in your browser.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data/ — download them from GitHub or copy them from the folder you cloned.
+
+```bash
+mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-06-derive-structured-fields-from-raw-address-data-ip-ca/data && for f in sites.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
+```
 
 ### Step 2
 
@@ -41,35 +45,35 @@ Repeat for 10.0.5.0/22 and 172.16.8.0/29 — note how the usable-host count chan
 
 ### Step 4
 
-Switch to Killercoda and create the source dataset of raw CIDR strings.
-
-```bash
-mkdir -p ~/dataplus/lab6 && cd ~/dataplus/lab6 && printf 'site,cidr\nHQ,192.168.10.0/24\nBranch,10.0.5.0/22\nDMZ,172.16.8.0/29\n' > sites.csv
-```
-
-### Step 5
-
 Derive the same four fields in code — this is the DERIVED VARIABLE technique from the exam objectives.
 
 ```bash
 python3 -c "import pandas as pd,ipaddress as ip;d=pd.read_csv('sites.csv');n=d.cidr.map(ip.ip_network);d['network']=[str(x.network_address) for x in n];d['broadcast']=[str(x.broadcast_address) for x in n];d['usable_hosts']=[x.num_addresses-2 for x in n];d['mask']=[str(x.netmask) for x in n];print(d)"
 ```
 
-### Step 6
+### Step 5
 
 Compare every derived value against what the IP Calculator gave you — they must match exactly.
 
-### Step 7
+### Step 6
 
 Decide the storage trade-off the exam asks about: store the derived columns (fast reads, more space) or recompute on demand (less space, slower). Write your choice and the reason.
 
-### Step 8
+### Step 7
 
 Save the enriched dataset.
 
 ```bash
 python3 -c "import pandas as pd,ipaddress as ip;d=pd.read_csv('sites.csv');n=d.cidr.map(ip.ip_network);d['network']=[str(x.network_address) for x in n];d['usable_hosts']=[x.num_addresses-2 for x in n];d.to_csv('sites_enriched.csv',index=False)" && cat sites_enriched.csv
 ```
+
+---
+
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/sites.csv`](data/sites.csv) — 298 bytes
 
 ---
 
@@ -81,6 +85,7 @@ The code and the IP Calculator agree: /24 gives 254 usable hosts, /22 gives 1022
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | ValueError: has host bits set | The address is not a valid network address for that prefix. Use ip_network(x, strict=False) or correct the CIDR. |
 | usable_hosts is negative for /31 or /32 | Those prefixes have no usable host range by the -2 convention. Note this edge case in your report. |
 | The numbers disagree with the calculator | Confirm you entered the same prefix length in both. A /22 is not a /24. |

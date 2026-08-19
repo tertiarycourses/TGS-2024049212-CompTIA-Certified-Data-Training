@@ -21,8 +21,8 @@ DOMAIN3 = [
         services="Killercoda Ubuntu, Python 3, pandas, statistics",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and the salary dataset — one director salary is far above the rest.",
-             "mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && printf 'employee,dept,salary\\nA,Ops,3800\\nB,Ops,4200\\nC,Ops,4000\\nD,Sales,4500\\nE,Sales,3900\\nF,Sales,4200\\nG,Tech,5200\\nH,Tech,4800\\nI,Tech,5000\\nJ,Exec,26000\\n' > salaries.csv"),
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data && for f in salaries.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
             ("Compute CENTRAL TENDENCY — mean, median and mode together.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('salaries.csv');s=d.salary;print('mean',round(s.mean(),2));print('median',s.median());print('mode',s.mode().tolist())\""),
             ("Compute DISPERSION — min, max, range, variance and standard deviation.",
@@ -37,12 +37,14 @@ DOMAIN3 = [
              "python3 -c \"import pandas as pd;d=pd.read_csv('salaries.csv');print(d.groupby('dept').salary.agg(['count','mean','median','std']).round(2))\""),
             ("Write your recommendation: which single number should be reported to the board, and why.", ""),
         ],
-        test=("With the outlier the mean is ~6560 but the median is only 4350. Removing it drops the mean to ~4400 "
-              "while the median barely moves (4350 → 4200). The Exec row is flagged at z ≈ 2.8. Your report recommends the MEDIAN."),
+        test=("Across 61 employees the mean is ~4978 but the median is only 4550. Removing the single Executive salary "
+              "drops the mean to ~4628 while the median barely moves (4550 → 4525). E999 is flagged at z ≈ 7.5, far beyond "
+              "the |z| > 3 threshold. Your report recommends the MEDIAN as the typical salary."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("mode returns several values", "A dataset with no repeated value returns every value. pandas .mode() correctly returns a list — report it as 'no single mode'."),
             ("Variance looks enormous", "Variance is in squared units. Report the standard deviation (its square root) instead, which is in dollars."),
-            ("No row is flagged at |z|>2", "With n=10 a single extreme point inflates the SD and hides itself. Try the median-absolute-deviation method and discuss the difference."),
+            ("Only one row is flagged", "That is correct — the dataset carries exactly one planted outlier (E999). Lower the threshold to |z| > 2 and note that nothing else appears, which is what a clean distribution looks like."),
         ],
     ),
     dict(
@@ -58,11 +60,9 @@ DOMAIN3 = [
         services="Killercoda Ubuntu, Python 3, pandas, scipy",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and install scipy.",
-             "mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && pip3 install scipy pandas --quiet"),
-            ("Create the A/B test dataset — group A is the old page, group B the new one.",
-             "printf 'group,order_value\\nA,42\\nA,38\\nA,45\\nA,40\\nA,37\\nA,44\\nA,41\\nA,39\\nB,48\\nB,52\\nB,47\\nB,50\\nB,53\\nB,49\\nB,51\\nB,46\\n' > abtest.csv"),
-            ("STATE THE HYPOTHESES before you look at any result — this is the discipline the exam tests.  "
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab9 && cd ~/dataplus/lab9 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-09-hypothesis-testing-t-test-p-value-and-the-two-error/data && for f in abtest.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+                        ("STATE THE HYPOTHESES before you look at any result — this is the discipline the exam tests.  "
              "H0: there is no difference in mean order value.  H1: the new page has a higher mean order value.", ""),
             ("Look at the group means first — a difference here is necessary but NOT sufficient.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('abtest.csv');print(d.groupby('group').order_value.agg(['count','mean','std']).round(2))\""),
@@ -76,9 +76,11 @@ DOMAIN3 = [
              "(Type I) and what does it cost the business? If you fail to reject and you are wrong (Type II), what does that cost?", ""),
             ("Write the one-paragraph recommendation a manager could act on — no statistics jargon.", ""),
         ],
-        test=("The t-test returns p well below 0.05 (approximately 0.000002), so you REJECT H0. Group B averages about "
-              "49.5 versus 40.75 for group A — a lift of roughly 8.75, with a confidence interval that excludes zero."),
+        test=("With 60 observations per group the t-test returns t ≈ -11.3 and p ≈ 1.9e-20, far below 0.05, so you "
+              "REJECT H0. Group B averages about 49.65 against 41.14 for group A — a lift of roughly 8.5, with a 95% "
+              "confidence interval that excludes zero."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("ModuleNotFoundError: scipy", "Run pip3 install scipy, adding --break-system-packages if Killercoda's pip refuses."),
             ("p-value is nan", "One group has fewer than two values or zero variance. Check your CSV loaded all 16 rows with d.shape."),
             ("The result feels too clean", "It is a teaching dataset with clean separation. Ask the trainer for the noisy variant to see a borderline p-value."),
@@ -97,8 +99,8 @@ DOMAIN3 = [
         services="Killercoda Ubuntu, Python 3, pandas, scipy",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and the monthly marketing dataset.",
-             "mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && printf 'month,spend,revenue,staff\\n1,10,118,12\\n2,12,131,12\\n3,15,152,13\\n4,18,171,14\\n5,20,188,14\\n6,22,197,15\\n7,25,221,16\\n8,28,238,16\\n9,30,255,17\\n10,33,271,18\\n' > marketing.csv"),
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-10-correlation-regression-and-the-causation-trap/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-10-correlation-regression-and-the-causation-trap/data && for f in marketing.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
             ("Compute the full CORRELATION MATRIX — every pair at once.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('marketing.csv');print(d[['spend','revenue','staff']].corr().round(4))\""),
             ("Get Pearson's r and its p-value for spend versus revenue specifically.",
@@ -114,9 +116,11 @@ DOMAIN3 = [
             ("Explain in writing: does hiring staff CAUSE revenue? Identify the confounding variable that drives both, "
              "and state the one sentence every analyst must be able to defend — correlation is not causation.", ""),
         ],
-        test=("Spend and revenue correlate at r ≈ 0.999 with R-squared ≈ 0.998, giving revenue ≈ 6.6 × spend + 52. "
-              "Staff also correlates ≈ 0.99 with revenue — but growth over time drives both, so the link is not causal."),
+        test=("Across 36 months spend and revenue correlate at r ≈ 0.991 with R-squared ≈ 0.982, giving "
+              "revenue ≈ 6.55 × spend + 54.1. Staff headcount ALSO correlates with revenue at r ≈ 0.970 — but growth "
+              "over time drives both, so that second relationship is not causal."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("r is exactly 1.0", "Perfect correlation means the data is synthetic and noise-free. Note that real business data never looks like this."),
             ("linregress has no attribute rvalue", "You are on a very old scipy. Use r,p = stats.pearsonr(...) and square r yourself."),
             ("The prediction looks unreasonable", "That is the extrapolation lesson — a linear model fitted on 10–33 has no evidence about 40. Say so in the report."),

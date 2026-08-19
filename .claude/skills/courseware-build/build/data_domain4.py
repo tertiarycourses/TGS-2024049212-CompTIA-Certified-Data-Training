@@ -22,11 +22,9 @@ DOMAIN4 = [
         services="Killercoda Ubuntu, Python 3, pandas, matplotlib",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and install matplotlib.",
-             "mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && pip3 install matplotlib pandas --quiet"),
-            ("Create the quarterly sales dataset used for every chart in this lab.",
-             "printf 'month,region,revenue,orders,unit_price\\nJan,Central,118,42,12.4\\nFeb,Central,131,47,12.8\\nMar,Central,152,55,13.1\\nJan,West,88,31,11.9\\nFeb,West,95,34,12.2\\nMar,West,104,38,12.0\\nJan,North,142,50,13.5\\nFeb,North,138,49,13.3\\nMar,North,161,58,13.9\\n' > sales.csv"),
-            ("Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.",
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab11 && cd ~/dataplus/lab11 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-11-choose-the-right-chart-five-questions-five-chart-typ/data && for f in sales.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
+                        ("Q1 'How is revenue trending?' → LINE CHART, because the x-axis is time.",
              "python3 -c \"import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');p=d.pivot_table(index='month',columns='region',values='revenue').reindex(['Jan','Feb','Mar']);p.plot(marker='o');plt.title('Revenue Trend by Region');plt.ylabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('01_line.png',dpi=120)\""),
             ("Q2 'Which region sells most?' → BAR CHART, because you are comparing categories.",
              "python3 -c \"import pandas as pd,matplotlib;matplotlib.use('Agg');import matplotlib.pyplot as plt;d=pd.read_csv('sales.csv');d.groupby('region').revenue.sum().sort_values().plot(kind='barh',color='#1F6FEB');plt.title('Total Revenue by Region');plt.xlabel('Revenue (SGD k)');plt.tight_layout();plt.savefig('02_bar.png',dpi=120)\""),
@@ -42,9 +40,11 @@ DOMAIN4 = [
              "ls -1 *.png"),
             ("Write the critique of 06_wrong.png: what does a pie chart hide that a line chart shows?", ""),
         ],
-        test=("Six PNG files exist. Each of the five correct charts answers its stated question, and your critique of "
-              "the wrong chart explains that a pie destroys the sequence and makes a trend impossible to read."),
+        test=("Six PNG files exist, built from 24 rows covering 6 months × 4 regions. Each of the five correct charts "
+              "answers its stated question, and your critique of the wrong chart explains that a pie destroys the "
+              "sequence and makes a trend impossible to read."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("No display / tkinter error", "You must set matplotlib.use('Agg') BEFORE importing pyplot — headless terminals have no display."),
             ("The PNG is blank", "You saved after calling plt.show() or a new figure. Call plt.savefig() before any clf/show, and use plt.close() between charts."),
             ("Months are out of order", "Alphabetical sorting puts Feb first. The .reindex(['Jan','Feb','Mar']) call is what fixes it."),
@@ -63,8 +63,8 @@ DOMAIN4 = [
         services="Killercoda Ubuntu, Python 3, pandas, matplotlib",
         env=KILLERCODA,
         steps=[
-            ("Create the lab folder and the source data for the dashboard.",
-             "mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && printf 'month,region,revenue,orders,target\\nJan,Central,118,42,120\\nFeb,Central,131,47,120\\nMar,Central,152,55,120\\nJan,West,88,31,100\\nFeb,West,95,34,100\\nMar,West,104,38,100\\nJan,North,142,50,130\\nFeb,North,138,49,130\\nMar,North,161,58,130\\n' > kpi.csv"),
+            ("Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data/ — download them from GitHub or copy them from the folder you cloned.",
+             "mkdir -p ~/dataplus/lab12 && cd ~/dataplus/lab12 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-12-build-a-kpi-dashboard-and-validate-its-accuracy/data && for f in kpi.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l"),
             ("Compute the headline KPIs first — you must know the true numbers BEFORE you draw anything.",
              "python3 -c \"import pandas as pd;d=pd.read_csv('kpi.csv');print('total revenue',d.revenue.sum());print('total orders',d.orders.sum());print('avg order value',round(d.revenue.sum()*1000/d.orders.sum(),2));print('vs target',round(d.revenue.sum()*100/d.target.sum(),1),'%')\""),
             ("Build the four-panel dashboard in one script.",
@@ -83,9 +83,11 @@ DOMAIN4 = [
              "sed -i 's/Mar,North,1610/Mar,North,161/' kpi.csv && python3 dashboard.py && python3 -c \"import pandas as pd;print('total',pd.read_csv('kpi.csv').revenue.sum())\""),
             ("Sign off the validation checklist: record count, recalculation, cross-validation, and visual review.", ""),
         ],
-        test=("dashboard.png shows four panels. Total revenue validates at 1129 by two independent methods. After the "
-              "planted error the total jumps to 2578 and North shows 483% of target — an impossible figure your validation flags immediately."),
+        test=("dashboard.png shows four panels built from 24 rows. Total revenue validates at 3021.3 by two independent "
+              "methods, and North reports 111.9% of target. After the planted error the total jumps by roughly 1450 and "
+              "North exceeds 250% of target — an impossible figure your validation flags immediately."),
         troubleshoot=[
+            ("The CSV contains '404: Not Found'", "curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned."),
             ("Panels overlap or the title is cut", "Use plt.tight_layout(rect=[0,0,1,0.95]) so the suptitle gets its own space."),
             ("sed did not change anything", "Check the exact text with grep 'Mar,North' kpi.csv — sed needs a byte-exact match."),
             ("The % of target axis looks wrong", "Confirm you summed target per region (3 months × the monthly target), not just one month's value."),

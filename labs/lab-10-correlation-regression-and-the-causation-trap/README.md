@@ -29,10 +29,10 @@ A correlation matrix, a fitted regression equation with R-squared, a prediction,
 
 ### Step 1
 
-Create the lab folder and the monthly marketing dataset.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-10-correlation-regression-and-the-causation-trap/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && printf 'month,spend,revenue,staff\n1,10,118,12\n2,12,131,12\n3,15,152,13\n4,18,171,14\n5,20,188,14\n6,22,197,15\n7,25,221,16\n8,28,238,16\n9,30,255,17\n10,33,271,18\n' > marketing.csv
+mkdir -p ~/dataplus/lab10 && cd ~/dataplus/lab10 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-10-correlation-regression-and-the-causation-trap/data && for f in marketing.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
@@ -85,14 +85,24 @@ Explain in writing: does hiring staff CAUSE revenue? Identify the confounding va
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/marketing.csv`](data/marketing.csv) — 666 bytes
+- [`data/marketing.xlsx`](data/marketing.xlsx) — 5,879 bytes
+
+---
+
 ## Test it — expected result
 
-Spend and revenue correlate at r ≈ 0.999 with R-squared ≈ 0.998, giving revenue ≈ 6.6 × spend + 52. Staff also correlates ≈ 0.99 with revenue — but growth over time drives both, so the link is not causal.
+Across 36 months spend and revenue correlate at r ≈ 0.991 with R-squared ≈ 0.982, giving revenue ≈ 6.55 × spend + 54.1. Staff headcount ALSO correlates with revenue at r ≈ 0.970 — but growth over time drives both, so that second relationship is not causal.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | r is exactly 1.0 | Perfect correlation means the data is synthetic and noise-free. Note that real business data never looks like this. |
 | linregress has no attribute rvalue | You are on a very old scipy. Use r,p = stats.pearsonr(...) and square r yourself. |
 | The prediction looks unreasonable | That is the extrapolation lesson — a linear model fitted on 10–33 has no evidence about 40. Say so in the report. |

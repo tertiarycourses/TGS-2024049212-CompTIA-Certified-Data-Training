@@ -1,0 +1,100 @@
+[
+ {
+  "customer_id": 1,
+  "name": "Ravi Lee",
+  "city": "Tampines",
+  "spend": 66.94,
+  "tags": [
+   "vip",
+   "repeat"
+  ],
+  "contact": {
+   "email": "cust1@example.sg",
+   "phone": "91575046"
+  }
+ },
+ {
+  "customer_id": 2,
+  "name": "Siti Ong",
+  "city": "Woodlands",
+  "spend": 115.83
+ },
+ {
+  "customer_id": 3,
+  "name": "John Ismail",
+  "city": "Jurong",
+  "spend": 244.66
+ },
+ {
+  "customer_id": 4,
+  "name": "Wei Ming Goh",
+  "city": "Singapore",
+  "spend": 188.96,
+  "tags": [
+   "new"
+  ]
+ },
+ {
+  "customer_id": 5,
+  "name": "Priya Pillai",
+  "city": "Tampines",
+  "spend": 64.36,
+  "contact": {
+   "email": "cust5@example.sg",
+   "phone": "98292028"
+  }
+ },
+ {
+  "customer_id": 6,
+  "name": "Daniel Singh",
+  "city": "Woodlands",
+  "spend": 203.98
+ },
+ {
+  "customer_id": 7,
+  "name": "Nurul Reyes",
+  "city": "Jurong",
+  "spend": 113.23,
+  "tags": [
+   "vip",
+   "repeat"
+  ]
+ },
+ {
+  "customer_id": 8,
+  "name": "Kai Foo",
+  "city": "Singapore",
+  "spend": 411.71
+ },
+ {
+  "customer_id": 9,
+  "name": "Aishah Nair",
+  "city": "Tampines",
+  "spend": 273.61,
+  "contact": {
+   "email": "cust9@example.sg",
+   "phone": "94108355"
+  }
+ },
+ {
+  "customer_id": 10,
+  "name": "Marcus Tan",
+  "city": "Woodlands",
+  "spend": 163.66,
+  "tags": [
+   "new"
+  ]
+ },
+ {
+  "customer_id": 11,
+  "name": "Divya Lee",
+  "city": "Jurong",
+  "spend": 241.45
+ },
+ {
+  "customer_id": 12,
+  "name": "Jun Hao Ong",
+  "city": "Singapore",
+  "spend": 204.78
+ }
+]

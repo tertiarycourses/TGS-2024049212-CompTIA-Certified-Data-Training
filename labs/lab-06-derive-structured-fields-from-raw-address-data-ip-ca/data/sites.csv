@@ -1,0 +1,12 @@
+site,cidr
+HQ,192.168.10.0/24
+Branch-West,10.0.4.0/22
+DMZ,172.16.8.0/29
+Warehouse,192.168.20.0/26
+Retail-East,10.1.0.0/16
+Lab-Network,172.20.14.0/28
+Guest-WiFi,192.168.100.0/23
+Backup-Site,10.10.10.0/25
+IoT-Segment,172.30.0.0/20
+Point-to-Point,192.168.250.0/30
+Legacy-Import,10.0.5.0/22

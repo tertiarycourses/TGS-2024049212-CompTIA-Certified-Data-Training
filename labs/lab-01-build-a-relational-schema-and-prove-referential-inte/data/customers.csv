@@ -1,0 +1,41 @@
+customer_id,first_name,last_name,email,region,joined
+1,Mei,Binte Rahman,mei.binte1@example.sg,East,2025-01-10
+2,Ravi,Ee,ravi.ee2@example.sg,North,2025-01-19
+3,Siti,Reyes,siti.reyes3@example.sg,West,2025-01-28
+4,John,Sim,john.sim4@example.sg,Central,2025-02-06
+5,Wei Ming,Sharma,wei.sharma5@example.sg,East,2025-02-15
+6,Priya,Goh,priya.goh6@example.sg,North,2025-02-24
+7,Daniel,Koh,daniel.koh7@example.sg,West,2025-03-05
+8,Nurul,Yeo,nurul.yeo8@example.sg,Central,2025-03-14
+9,Kai,Lee,kai.lee9@example.sg,East,2025-03-23
+10,Aishah,Chan,aishah.chan10@example.sg,North,2025-04-01
+11,Marcus,Teo,marcus.teo11@example.sg,West,2025-04-10
+12,Divya,Foo,divya.foo12@example.sg,Central,2025-04-19
+13,Jun Hao,Kumar,jun.kumar13@example.sg,East,2025-04-28
+14,Farah,Wong,farah.wong14@example.sg,North,2025-05-07
+15,Terence,Pillai,terence.pillai15@example.sg,West,2025-05-16
+16,Lakshmi,Tay,lakshmi.tay16@example.sg,Central,2025-05-25
+17,Ryan,Hassan,ryan.hassan17@example.sg,East,2025-06-03
+18,Hui Ling,Ong,hui.ong18@example.sg,North,2025-06-12
+19,Arjun,Abdullah,arjun.abdullah19@example.sg,West,2025-06-21
+20,Grace,Chua,grace.chua20@example.sg,Central,2025-06-30
+21,Zhi Wei,Nair,zhi.nair21@example.sg,East,2025-07-09
+22,Sofia,Lim,sofia.lim22@example.sg,North,2025-07-18
+23,Ben,Menon,ben.menon23@example.sg,West,2025-07-27
+24,Anitha,Singh,anitha.singh24@example.sg,Central,2025-08-05
+25,Yee Ling,Osman,yee.osman25@example.sg,East,2025-08-14
+26,Hakim,Nur,hakim.nur26@example.sg,North,2025-08-23
+27,Chloe,Ismail,chloe.ismail27@example.sg,West,2025-09-01
+28,Vikram,Ng,vikram.ng28@example.sg,Central,2025-09-10
+29,Serene,Raj,serene.raj29@example.sg,East,2025-09-19
+30,Amirah,Tan,amirah.tan30@example.sg,North,2025-09-28
+31,Mei,Binte Rahman,mei.binte31@example.sg,West,2025-10-07
+32,Ravi,Ee,ravi.ee32@example.sg,Central,2025-10-16
+33,Siti,Reyes,siti.reyes33@example.sg,East,2025-10-25
+34,John,Sim,john.sim34@example.sg,North,2025-11-03
+35,Wei Ming,Sharma,wei.sharma35@example.sg,West,2025-11-12
+36,Priya,Goh,priya.goh36@example.sg,Central,2025-11-21
+37,Daniel,Koh,daniel.koh37@example.sg,East,2025-01-04
+38,Nurul,Yeo,nurul.yeo38@example.sg,North,2025-01-13
+39,Kai,Lee,kai.lee39@example.sg,West,2025-01-22
+40,Aishah,Chan,aishah.chan40@example.sg,Central,2025-01-31

@@ -29,10 +29,10 @@ A descriptive-statistics report showing mean, median, mode, range, variance, SD 
 
 ### Step 1
 
-Create the lab folder and the salary dataset — one director salary is far above the rest.
+Create the working folder and download this lab's dataset. The files also ship in the course repo under labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data/ — download them from GitHub or copy them from the folder you cloned.
 
 ```bash
-mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && printf 'employee,dept,salary\nA,Ops,3800\nB,Ops,4200\nC,Ops,4000\nD,Sales,4500\nE,Sales,3900\nF,Sales,4200\nG,Tech,5200\nH,Tech,4800\nI,Tech,5000\nJ,Exec,26000\n' > salaries.csv
+mkdir -p ~/dataplus/lab8 && cd ~/dataplus/lab8 && BASE=https://raw.githubusercontent.com/tertiarycourses/TGS-2024049212-CompTIA-Certified-Data-Training/main/labs/lab-08-descriptive-statistics-and-the-outlier-that-moves-th/data && for f in salaries.csv; do curl -fsSO $BASE/$f || echo FAILED $f; done && ls -l
 ```
 
 ### Step 2
@@ -89,17 +89,27 @@ Write your recommendation: which single number should be reported to the board, 
 
 ---
 
+## Dataset
+
+This lab ships with its own data — you do not have to type it in. See [`data/README.md`](data/README.md) for what each file contains and which defects are planted in it.
+
+- [`data/salaries.csv`](data/salaries.csv) — 1,256 bytes
+- [`data/salaries.xlsx`](data/salaries.xlsx) — 6,156 bytes
+
+---
+
 ## Test it — expected result
 
-With the outlier the mean is ~6560 but the median is only 4350. Removing it drops the mean to ~4400 while the median barely moves (4350 → 4200). The Exec row is flagged at z ≈ 2.8. Your report recommends the MEDIAN.
+Across 61 employees the mean is ~4978 but the median is only 4550. Removing the single Executive salary drops the mean to ~4628 while the median barely moves (4550 → 4525). E999 is flagged at z ≈ 7.5, far beyond the |z| > 3 threshold. Your report recommends the MEDIAN as the typical salary.
 
 ## If it doesn't work
 
 | Symptom | Fix |
 |---|---|
+| The CSV contains '404: Not Found' | curl wrote the error page into the file. Confirm the BASE URL, re-run with -fsSO so curl fails loudly, or copy the files from the repo folder you cloned. |
 | mode returns several values | A dataset with no repeated value returns every value. pandas .mode() correctly returns a list — report it as 'no single mode'. |
 | Variance looks enormous | Variance is in squared units. Report the standard deviation (its square root) instead, which is in dollars. |
-| No row is flagged at |z|>2 | With n=10 a single extreme point inflates the SD and hides itself. Try the median-absolute-deviation method and discuss the difference. |
+| Only one row is flagged | That is correct — the dataset carries exactly one planted outlier (E999). Lower the threshold to |z| > 2 and note that nothing else appears, which is what a clean distribution looks like. |
 
 ---
 
